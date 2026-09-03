@@ -3,18 +3,23 @@
 // =====================================================================
 // Mantenha este arquivo igual em todas as páginas do site.
 // Se você recriar o projeto Firebase, só precisa trocar os valores aqui.
+//
+// >>> Esta é a versão de TESTE — aponta pro projeto Firebase
+// >>> "cdnteste-2e77d", separado do banco de produção ("chuva-de-neon").
+// >>> Confirme sempre, ao abrir o DevTools, que projectId aparece como
+// >>> "cdnteste-2e77d" antes de mexer em qualquer ficha por aqui.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDU-e21zaoVuW-1Wjzj5b6CfcyOZDj2BsE",
-  authDomain: "chuva-de-neon.firebaseapp.com",
-  databaseURL: "https://chuva-de-neon-default-rtdb.firebaseio.com",
-  projectId: "chuva-de-neon",
-  storageBucket: "chuva-de-neon.firebasestorage.app",
-  messagingSenderId: "994935691317",
-  appId: "1:994935691317:web:418a37b0700b2bd083b97c"
+  apiKey: "AIzaSyCGVh1uVU3gw8IlikK-osvWKAz899rLQDc",
+  authDomain: "cdnteste-2e77d.firebaseapp.com",
+  databaseURL: "https://cdnteste-2e77d-default-rtdb.firebaseio.com",
+  projectId: "cdnteste-2e77d",
+  storageBucket: "cdnteste-2e77d.firebasestorage.app",
+  messagingSenderId: "163603038670",
+  appId: "1:163603038670:web:d9f8870ac486a6df9fab9f"
 };
 
 export const app = initializeApp(firebaseConfig);
