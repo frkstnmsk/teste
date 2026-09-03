@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Chuva de Neon // Migração para Mesas</title>
+<link rel="stylesheet" href="style.css">
+<style>
+    body { padding: 30px; max-width: 720px; margin: 0 auto; }
+    pre { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 4px; overflow-x: auto; font-size: 0.8rem; }
+    button { margin: 10px 10px 10px 0; }
+    #log { white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.78rem; margin-top: 20px; }
+</style>
+</head>
+<body>
+<h1>Migração: dados antigos → mesas/{mesaId}</h1>
+<p>
+    Essa página existe só pra rodar UMA VEZ, depois de atualizar o site pra
+    versão com mesas separadas. Antes dela, toda a rede (fichas, npcs,
+    calendário, log de dados etc.) vivia na raiz do banco. Agora cada
+    Mestre tem sua própria mesa em <code>mesas/{mesaId}/...</code>.
+</p>
+<p>
+    Este botão copia TUDO que hoje está na raiz do banco (exceto
+    <code>itensGlobais</code>, que continua compartilhado de propósito)
+    para dentro de <b><code id="alvo-mesa">mesas/frkstnmsk</code></b>, e cria o
+    <code>loginIndex</code> de cada ficha já existente apontando pra essa
+    mesa. Ajuste o id da mesa de destino no campo abaixo se o dono
+    original das fichas não for o <code>frkstnmsk</code>.
+</p>
+<div class="modal-field">
+    <label for="input-mesa-destino">Mesa de destino (mesaId)</label>
+    <input type="text" id="input-mesa-destino" value="frkstnmsk">
+</div>
+<button id="btn-copiar" class="btn-lime" type="button">1. Copiar dados pra mesas/{mesaId}</button>
+<button id="btn-apagar-raiz" class="btn-red" type="button">2. Apagar os dados antigos da raiz (só depois de confirmar que a cópia deu certo!)</button>
+<div id="log"></div>
+
+<script type="module">
+import { db } from "./firebase-config.js";
+import { ref, get, set, remove } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
+
+const NOS_DA_MESA = [
+    "fichas", "npcs", "godmode", "godmodeIgnorarPenalidadeSaude",
+    "combateAtivo", "acoesPendentes", "popupTreinamento",
+    "calendario", "logDados", "avisoCustoVida"
+];
+
+const logEl = document.getElementById("log");
+const inputMesa = document.getElementById("input-mesa-destino");
+const alvoLabel = document.getElementById("alvo-mesa");
+inputMesa.addEventListener("input", () => { alvoLabel.innerText = `mesas/${inputMesa.value || "?"}`; });
+
+function log(msg) {
+    logEl.innerText += msg + "\n";
+}
+
+document.getElementById("btn-copiar").addEventListener("click", async () => {
+    const mesaId = inputMesa.value.trim();
+    if (!mesaId) { log("Preencha o id da mesa de destino."); return; }
+    log(`Iniciando cópia pra mesas/${mesaId} ...`);
+
+    for (const no of NOS_DA_MESA) {
+        const snap = await get(ref(db, no));
+        if (!snap.exists()) { log(`- ${no}: nada na raiz, pulei.`); continue; }
+        await set(ref(db, `mesas/${mesaId}/${no}`), snap.val());
+        log(`- ${no}: copiado.`);
+    }
+
+    // Índice de login: uma entrada por ficha já existente, apontando pra
+    // essa mesa (necessário pro fluxo de "Entrar" achar a mesa certa).
+    const snapFichas = await get(ref(db, "fichas"));
+    if (snapFichas.exists()) {
+        const ids = Object.keys(snapFichas.val());
+        for (const id of ids) {
+            await set(ref(db, `loginIndex/${id}`), mesaId);
+        }
+        log(`- loginIndex: ${ids.length} ficha(s) indexada(s) pra mesas/${mesaId}.`);
+    }
+
+    log("\nCópia concluída. Confira o Firebase Console pra garantir que\nmesas/" + mesaId + " está com tudo antes de apagar a raiz.");
+});
+
+document.getElementById("btn-apagar-raiz").addEventListener("click", async () => {
+    if (!confirm("Tem certeza? Isso apaga fichas/npcs/calendário etc. da RAIZ do banco (o que já foi copiado pra mesas/{mesaId} continua intacto). itensGlobais NÃO é tocado.")) return;
+    for (const no of NOS_DA_MESA) {
+        await remove(ref(db, no));
+        log(`- ${no}: removido da raiz.`);
+    }
+    log("\nRaiz limpa. A rede agora só usa mesas/{mesaId} + itensGlobais compartilhado.");
+});
+</script>
+</body>
+</html>

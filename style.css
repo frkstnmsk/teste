@@ -1,0 +1,308 @@
+/* =====================================================================
+   CHUVA DE NEON — Estilo compartilhado (Login + Ficha)
+   Paleta e linguagem visual herdadas do mapa interativo (CdN.html)
+   ===================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+    --bg-dark: #050505;
+    --panel-bg: rgba(13, 13, 15, 0.95);
+    --panel-bg-soft: rgba(20, 20, 24, 0.7);
+    --neon-purple: #8b5cf6;
+    --neon-lime: #a3e635;
+    --neon-red: #ef4444;
+    --neon-blue: #0ea5e9;
+    --neon-gold: #facc15;
+    --text-main: #f0ecd8;
+    --text-dim: #94a3b8;
+    --border-style: 1px solid rgba(255, 255, 255, 0.15);
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    min-height: 100vh;
+}
+
+body {
+    background-color: var(--bg-dark);
+    /* Mesma imagem de fundo do mapa (mapa.html) — os dois gradientes
+       neon ficam por cima, como um verniz, então a imagem aparece mas o
+       visual roxo/lima da ficha não muda. */
+    background-image:
+        radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.12), transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(163, 230, 53, 0.08), transparent 45%),
+        url("https://imgur.com/pBTrEcE.jpeg");
+    background-size: auto, auto, cover;
+    background-position: center, center, center;
+    background-repeat: no-repeat, no-repeat, no-repeat;
+    background-attachment: fixed, fixed, fixed;
+    font-family: var(--font-body);
+    color: var(--text-main);
+    min-height: 100vh;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--neon-purple); border-radius: 2px; }
+
+a { color: var(--neon-blue); }
+
+/* ---------- Ícones (Lucide) ----------
+   Tamanho padrão pros ícones SVG que a lucide.createIcons() gera a
+   partir de <i data-lucide="..."></i>. Ajusta sozinho junto com o texto
+   ao redor, sem depender de fonte de emoji do sistema/navegador. */
+svg.lucide {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.2;
+    vertical-align: -3px;
+    flex-shrink: 0;
+}
+
+/* ---------- Tipografia genérica ---------- */
+h1, h2, h3, h4 { font-family: var(--font-display); }
+
+.eyebrow {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    letter-spacing: 1.8px;
+    color: var(--neon-purple);
+    display: block;
+}
+
+/* ---------- Botões ---------- */
+button, .btn {
+    background: transparent;
+    border: 1px solid var(--neon-purple);
+    padding: 10px 18px;
+    color: white;
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 2px;
+}
+button:hover, .btn:hover {
+    background: var(--neon-purple);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+}
+button:disabled { opacity: 0.35; cursor: not-allowed; }
+button:disabled:hover { background: transparent; box-shadow: none; }
+
+.btn-lime { border-color: var(--neon-lime); color: var(--neon-lime); }
+.btn-lime:hover { background: var(--neon-lime); color: #050505; box-shadow: 0 0 10px rgba(163, 230, 53, 0.4); }
+
+.btn-red { border-color: var(--neon-red); color: var(--neon-red); }
+.btn-red:hover { background: var(--neon-red); color: white; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+
+.btn-blue { border-color: var(--neon-blue); color: var(--neon-blue); }
+.btn-blue:hover { background: var(--neon-blue); color: white; box-shadow: 0 0 10px rgba(14, 165, 233, 0.4); }
+
+.btn-ghost { border-color: rgba(255,255,255,0.15); color: var(--text-dim); }
+.btn-ghost:hover { background: rgba(255,255,255,0.08); box-shadow: none; color: var(--text-main); }
+
+/* ---------- Inputs genéricos ---------- */
+input[type="text"], input[type="password"], input[type="number"], textarea, select {
+    background: #000;
+    border: var(--border-style);
+    padding: 10px 12px;
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    border-radius: 2px;
+    width: 100%;
+}
+@media (max-width: 700px) {
+    /* 16px é o mínimo pra iOS Safari não dar zoom automático ao focar
+       o campo — com 0.9rem (~14.4px) a tela "pulava" de zoom toda vez
+       que o jogador tocava num input, aí tinha que dar zoom-out de novo. */
+    input[type="text"], input[type="password"], input[type="number"], textarea, select {
+        font-size: 16px;
+    }
+    .login-box { padding: 22px; }
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--neon-purple);
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.3);
+}
+input[type="number"] { font-family: var(--font-mono); }
+textarea { resize: vertical; min-height: 90px; line-height: 1.5; font-family: var(--font-body); }
+
+label {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--neon-purple);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+/* ---------- Badges ---------- */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 5px 12px;
+    border-radius: 2px;
+    border: 1px solid;
+}
+.badge.mestre { color: var(--neon-red); border-color: var(--neon-red); background: rgba(239, 68, 68, 0.08); }
+.badge.jogador { color: var(--neon-lime); border-color: var(--neon-lime); background: rgba(163, 230, 53, 0.08); }
+
+/* ---------- Painel genérico (cartão) ---------- */
+.panel {
+    background: var(--panel-bg);
+    border: var(--border-style);
+    border-radius: 4px;
+    backdrop-filter: blur(8px);
+}
+
+.hint {
+    font-size: 0.7rem;
+    background: rgba(163, 230, 53, 0.03);
+    border: 1px dashed rgba(163, 230, 53, 0.3);
+    padding: 10px 12px;
+    color: var(--neon-lime);
+    line-height: 1.4;
+    border-radius: 2px;
+}
+
+.section-header {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    color: var(--text-dim);
+    margin: 16px 0 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+.section-header::after { content: ""; height: 1px; background: rgba(255,255,255,0.08); flex: 1; }
+
+/* ---------- Toast ---------- */
+#toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.toast-msg {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 18px;
+    border-radius: 2px;
+    background: #0a0a0c;
+    border: 1px solid var(--neon-lime);
+    color: var(--neon-lime);
+    box-shadow: 0 0 20px rgba(163, 230, 53, 0.2);
+    animation: toast-in 0.2s ease;
+    max-width: 320px;
+}
+.toast-msg.erro { border-color: var(--neon-red); color: var(--neon-red); box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); }
+.toast-msg.critico-acerto { border-color: var(--neon-gold); color: var(--neon-gold); box-shadow: 0 0 24px rgba(250, 204, 21, 0.35); }
+.toast-msg.critico-falha { border-color: var(--neon-red); color: var(--neon-red); box-shadow: 0 0 24px rgba(239, 68, 68, 0.4); animation: toast-in 0.2s ease, critico-falha-pulso 1s ease-in-out 2; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes critico-falha-pulso { 0%, 100% { box-shadow: 0 0 24px rgba(239, 68, 68, 0.4); } 50% { box-shadow: 0 0 34px rgba(239, 68, 68, 0.75); } }
+
+/* ---------- Modal (compartilhado com o estilo do mapa) ---------- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    padding: 20px;
+}
+.modal-overlay.active { visibility: visible; opacity: 1; }
+
+.modal-content {
+    background: var(--panel-bg);
+    border: 1px solid var(--neon-purple);
+    box-shadow: 0 0 35px rgba(139, 92, 246, 0.3);
+    padding: 32px;
+    width: 480px;
+    max-width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+.modal-content h4 {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    color: #fff;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 10px;
+    font-size: 1.05rem;
+    letter-spacing: 1px;
+}
+.modal-header-flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 10px;
+    margin-bottom: -18px; /* compensa o gap do .modal-content, já que h4 não é mais o 1º filho direto com sua própria borda */
+}
+.modal-header-flex h4 {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin: 0;
+}
+.modal-header-flex .btn-ghost {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+.modal-field { display: flex; flex-direction: column; gap: 6px; }
+.modal-imagem-linha { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.modal-imagem-preview { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); }
+.modal-imagem-botoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.modal-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+.modal-btns button { flex: 1; padding: 12px; font-size: 0.75rem; min-width: 100px; }
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 720px) {
+    .modal-content { width: 100%; padding: 22px; }
+}
+
+/* ---------- Acessibilidade: foco visível ---------- */
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid var(--neon-lime);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}

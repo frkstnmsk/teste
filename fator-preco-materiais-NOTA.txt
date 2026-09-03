@@ -1,0 +1,63 @@
+===============================================================================
+ ADENDO — Fator de preço de materiais (veículos), por mesa
+===============================================================================
+Pedido do usuário: preço de materiais/mecânico de veículo (Fase 3) varia de
+mesa pra mesa; hoje o CN$ mostrado é só referência (não desconta nada da
+ficha) — usuário pediu pra poder configurar um valor padrão + um percentual
+que aumenta (ou diminui) esse valor automaticamente, por mesa.
+
+O QUE CONTINUA IGUAL:
+  - Materiais consumidos (metais leves, eletrônicos etc.) NÃO mudam — a
+    tabela CUSTOS_UPGRADE_VEICULO (dados-manual.js) continua sendo a fonte
+    de verdade dos materiais gastos, sem ajuste nenhum.
+  - CN$ continua sendo só um texto de referência no modal — nenhum saldo é
+    debitado automaticamente da ficha (narrador decide se cobra à parte,
+    como já era).
+
+O QUE FOI ADICIONADO:
+  mestre.js
+    - ouvirFatorPrecoMateriaisVeiculo(callback) / definirFatorPrecoMateriaisVeiculo(percentual)
+      — toggle por mesa (mesas/{mesaId}/fatorPrecoMateriaisVeiculo), mesmo
+      padrão de godmode. Percentual pode ser negativo (mesa que barateia)
+      ou positivo (mesa que encarece). 0 = preço padrão do manual.
+
+  regras.js
+    - precoVeiculoComFator(precoBase, fatorPercentual) — função pura,
+      Math.round(precoBase * (1 + fator/100)). null in → null out.
+
+  ficha.js
+    - fatorPrecoMateriaisVeiculoAtivo (cache local, sincronizado em tempo
+      real via configurarFatorPrecoMateriaisVeiculo, chamada em setup()
+      junto dos outros listeners).
+    - configurarFatorPrecoMateriaisVeiculo(): liga o listener e o campo de
+      input do Mestre (grava só no blur/Enter, não a cada tecla).
+    - textoCustoReferenciaVeiculo(precoBase, textoMateriais): monta a frase
+      "Custo de referência: CN$ X (base CN$ Y +Z%) (...)" quando o fator
+      != 0, ou só "CN$ X" quando fator == 0 (comportamento antigo intacto).
+    - Os dois modais que já mostravam custo (abrirModalMecanicoVeiculo — dono
+      — e o de terceiro, Fase 6) passaram a usar essa função em vez do texto
+      fixo de antes.
+
+  ficha.html
+    - novo campo numérico "Ajuste de preço de materiais — veículos (%)" no
+      Painel do Mestre, ao lado do toggle de Godmode (só o Mestre vê, mesmo
+      lugar/visibilidade que os outros toggles do painel).
+
+COMO USAR: Mestre abre o Painel do Mestre, digita o percentual (ex.: 20 pra
+mesa que cobra 20% a mais, -15 pra mesa que barateia 15%) e sai do campo
+(Enter ou clicar fora). Todo modal de Melhorar/Reparar veículo (tanto do
+dono quanto de terceiro) passa a mostrar o preço já ajustado, com o valor
+base entre parênteses pra rastreabilidade. Isso é por mesa (não por
+jogador), então todo mundo da mesma campanha vê o mesmo ajuste.
+
+VALIDADO: node --check limpo em ficha.js, mestre.js, regras.js. Teste
+isolado (node --input-type=module) de precoVeiculoComFator confirmando
+arredondamento correto (ex.: base 750 + 33% = 998, não 997.5).
+NÃO RODADO ponta a ponta (sem ambiente Firebase real) — revisar
+visualmente: campo salvando corretamente ao trocar de mesa/reload, e o
+texto do modal atualizando em tempo real se o Mestre mudar o percentual
+com um modal já aberto (hoje o cache é lido no momento em que o modal é
+CONSTRUÍDO — se o Mestre mudar o fator com o modal já aberto na tela, o
+texto só atualiza da próxima vez que o modal for reaberto, não ao vivo
+dentro do mesmo modal já montado).
+===============================================================================

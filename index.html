@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chuva de Neon // Acesso ao Terminal</title>
+<link rel="stylesheet" href="style.css">
+<style>
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .login-box {
+        width: 100%;
+        max-width: 420px;
+        padding: 38px;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+    }
+
+    .login-title {
+        text-align: center;
+    }
+    .login-title .eyebrow { justify-content: center; text-align: center; margin-bottom: 8px; }
+    .login-title h1 {
+        font-size: 1.6rem;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: #fff;
+    }
+    .login-title p {
+        margin-top: 10px;
+        font-size: 0.8rem;
+        color: var(--text-dim);
+        line-height: 1.5;
+    }
+
+    .tabs {
+        display: flex;
+        border: var(--border-style);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .tabs button {
+        flex: 1;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        color: var(--text-dim);
+    }
+    .tabs button.active {
+        background: var(--neon-purple);
+        color: #fff;
+        box-shadow: none;
+    }
+    .tabs button:hover { box-shadow: none; }
+
+    .login-fields { display: flex; flex-direction: column; gap: 16px; }
+
+    #btn-acao { padding: 14px; font-size: 0.85rem; }
+
+    #login-status-msg {
+        display: none;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--neon-red);
+        border: 1px dashed rgba(239, 68, 68, 0.4);
+        background: rgba(239, 68, 68, 0.06);
+        padding: 10px 12px;
+        border-radius: 2px;
+        line-height: 1.4;
+    }
+
+    .login-foot {
+        font-size: 0.68rem;
+        color: var(--text-dim);
+        text-align: center;
+        line-height: 1.5;
+    }
+
+    .spinner {
+        display: none;
+        text-align: center;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--neon-lime);
+    }
+</style>
+</head>
+<body>
+
+<div class="login-box panel">
+    <div class="login-title">
+        <span class="eyebrow">Distrito Norte // Rede de Acesso</span>
+        <h1>Chuva de Neon</h1>
+        <p>Conecte-se a uma ficha existente ou registre um novo Caminhante na rede.</p>
+    </div>
+
+    <div class="tabs">
+        <button id="tab-entrar" class="active" type="button">Entrar</button>
+        <button id="tab-criar" type="button">Registrar Nova Ficha</button>
+    </div>
+
+    <div class="login-fields">
+        <div class="modal-field">
+            <label for="login-user">Login</label>
+            <input type="text" id="login-user" autocomplete="username" placeholder="ex: niki-valente">
+        </div>
+        <div class="modal-field">
+            <label for="login-pass">Senha</label>
+            <input type="password" id="login-pass" autocomplete="current-password" placeholder="••••••••">
+        </div>
+        <div class="modal-field" id="campo-nome-exibicao" style="display:none;">
+            <label for="login-nome-exibicao">Nome da ficha (como vai aparecer)</label>
+            <input type="text" id="login-nome-exibicao" placeholder="ex: Niki Valente">
+        </div>
+        <div class="modal-field" id="campo-mesa" style="display:none;">
+            <label for="login-mesa">Mesa (qual Mestre vai te mestrar)</label>
+            <select id="login-mesa"></select>
+        </div>
+    </div>
+
+    <div id="login-status-msg"></div>
+
+    <button id="btn-acao" class="btn-lime" type="button">Inicializar Link</button>
+    <div class="spinner" id="login-spinner">CONECTANDO AO SINAL...</div>
+
+    <p class="login-foot">
+        Login comum cria/acessa uma ficha de jogador, com acesso restrito.<br>
+        O acesso de Mestre é reconhecido automaticamente por credenciais próprias.
+    </p>
+</div>
+
+<script type="module" src="auth.js"></script>
+</body>
+</html>

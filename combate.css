@@ -1,0 +1,148 @@
+/* ============================================================
+   combate.css — estilos do Gerenciador de Combate
+   Anexe este trecho em style.css / ficha.css.
+   Usa as variáveis já existentes no projeto:
+   --neon-red, --neon-lime, --neon-purple, --font-mono, --text-dim
+   ============================================================ */
+
+/* Caixa fixa "VOCÊ ESTÁ EM COMBATE!" */
+.combate-alerta-fixo {
+  position: fixed;
+  /* Fica ENCOSTADA embaixo da topbar (mesma variável usada pelo painel
+     de info do topo em ficha.css) — em vez de sobrepor top:12px, que
+     ficava atrás da topbar (z-index 4000) e nunca aparecia de verdade
+     pro jogador, mesmo com o elemento existindo certinho no DOM. */
+  top: calc(var(--topbar-h, 90px) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4500;
+  background: var(--neon-red);
+  color: #fff;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  padding: 10px 18px;
+  border-radius: 2px;
+  border: none;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.55);
+  animation: combate-pulso 1.6s ease-in-out infinite;
+  cursor: pointer;
+}
+
+.combate-alerta-fixo.combate-meu-turno {
+  background: var(--neon-lime);
+  color: #0a0a0a;
+  box-shadow: 0 0 14px rgba(163, 230, 53, 0.6);
+}
+
+@keyframes combate-pulso {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+/* Trava visual dos botões fora do turno */
+.combate-desabilitado {
+  opacity: 0.35;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------
+   Trava automática de ações fora do turno (ficha.js alterna a
+   classe .combate-bloqueio-ativo no <body> via travarAcoesForaDoTurno()).
+   Cobre os 3 pontos de rolagem/ação da ficha: perícias/atributos
+   (.btn-rolar), manobras de combate (.btn-pericia-golpe) e uso de
+   itens/armas (.btn-usar-item). O próprio alerta fixo nunca é travado.
+   ------------------------------------------------------------ */
+body.combate-bloqueio-ativo .btn-rolar,
+body.combate-bloqueio-ativo .btn-pericia-golpe,
+body.combate-bloqueio-ativo .btn-usar-item {
+  opacity: 0.35;
+  cursor: not-allowed !important;
+  pointer-events: none;
+  filter: grayscale(0.6);
+}
+
+/* Personagem FORA do combate enquanto há combate ativo: pode rolar
+   perícias/atributos normalmente (.btn-rolar fica de fora), mas não
+   pode fazer nada direcionado a quem está no combate — manobras
+   (.btn-pericia-golpe) e uso de armas/itens (.btn-usar-item) continuam
+   travados. */
+body.combate-bloqueio-alvo .btn-pericia-golpe,
+body.combate-bloqueio-alvo .btn-usar-item {
+  opacity: 0.35;
+  cursor: not-allowed !important;
+  pointer-events: none;
+  filter: grayscale(0.6);
+}
+
+/* Painel/modal do jogador */
+.combate-painel-jogador {
+  position: fixed;
+  /* Era um valor fixo (60px) menor que a altura real da topbar
+     (nome/PV/EN, z-index 4000) — em telas onde a topbar passa de
+     60px (ex: celular, com os badges de roupa quebrando linha), a
+     caixa nascia com o topo escondido atrás dela. Mesmo padrão já
+     usado em .painel-info-topo/.combate-alerta-fixo: encostar
+     embaixo da topbar de verdade, usando a variável que ela mesma
+     expõe. */
+  top: calc(var(--topbar-h, 90px) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 998;
+  width: 100%;
+  max-width: 420px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.combate-painel-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.combate-fechar {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 4px 8px;
+  box-shadow: none;
+}
+
+.combate-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.combate-linha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.combate-linha-ativa {
+  border: 1px solid var(--neon-lime);
+  background: rgba(163, 230, 53, 0.06);
+  color: #fff;
+}
+
+.combate-nome {
+  font-weight: 600;
+  min-width: 110px;
+  color: #fff;
+}

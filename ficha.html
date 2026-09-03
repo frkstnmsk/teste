@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chuva de Neon // Ficha</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="ficha.css?v=20260822-fixhistorico">
+<link rel="stylesheet" href="combate.css">
+</head>
+<body>
+
+<div id="tela-carregando" class="loading-screen">
+    <span class="eyebrow">Sincronizando</span>
+    <p>Conectando ao sinal da rede...</p>
+</div>
+
+<!-- ===================== AÇÕES PENDENTES (ícone lateral + gaveta flutuante) ===================== -->
+<!-- Lugar próprio, fora do Painel do Mestre: não é uma tela que cobre
+     tudo, é uma caixa que desliza a partir da borda esquerda, com o
+     resto da ficha continuando visível e clicável por trás. -->
+<button id="btn-pendentes-lateral" class="pendentes-lateral-btn" type="button" style="display:none;" title="Ações Pendentes">
+    <i data-lucide="clipboard-list" class="pendentes-lateral-icone"></i>
+    <span id="badge-pendentes-lateral" class="badge-pendentes-lateral" style="display:none;"></span>
+</button>
+
+<aside id="drawer-pendentes" class="drawer-pendentes">
+    <!-- Metade de cima: o próprio Painel do Mestre, embutido direto aqui
+         (não é mais um botão que abre um painel separado). Ele já aparece
+         pronto assim que a gaveta de Ações Pendentes é aberta, sem precisar
+         de clique extra. Não força 50/50 — o bloco só ocupa o que o
+         conteúdo precisa, e a metade de baixo (Ações Pendentes) sobe pra
+         ocupar o resto. -->
+    <div class="drawer-pendentes-secao-mestre">
+        <h4>Painel do Mestre</h4>
+        <div class="mestre-grid">
+            <button class="btn-lime mestre-acao" data-acao="xp" type="button">Dar XP</button>
+            <button class="btn-blue mestre-acao" data-acao="dado" type="button">Rolar Dado</button>
+            <button class="btn-red mestre-acao" data-acao="dano" type="button">Causar Dano</button>
+            <button class="btn-red mestre-acao" data-acao="condicao" type="button">Causar Condição</button>
+            <button class="btn-ghost mestre-acao" data-acao="npcs" type="button">NPCs</button>
+            <button class="btn-ghost mestre-acao" data-acao="dashboard" type="button">Fichas ativas</button>
+            <button class="btn-ghost mestre-acao" data-acao="biblioteca" type="button">Biblioteca de Itens</button>
+            <button class="btn-ghost mestre-acao" data-acao="biblioteca-receitas" type="button">Biblioteca de Receitas</button>
+            <label class="godmode-toggle">
+                <input type="checkbox" id="chk-godmode">
+                Godmode (ignora trava de edição)
+            </label>
+            <label class="godmode-toggle godmode-suboption">
+                <input type="checkbox" id="chk-godmode-ignorar-saude">
+                Ignorar penalidade de Machucado/Muito Machucado (requer Godmode ativo)
+            </label>
+            <label class="godmode-toggle">
+                Ajuste de preço de materiais — veículos (%)
+                <input type="number" id="input-fator-preco-materiais-veiculo" value="0" step="1" style="width:70px;margin-left:8px;" title="Percentual somado/subtraído ao CN$ de referência de Melhorar/Reparar veículo (Fase 3). 0 = preço padrão do manual. Ex.: 20 = +20%, -10 = -10%. Não muda os materiais consumidos, só o valor em dinheiro mostrado como referência.">
+            </label>
+            <label class="godmode-toggle">
+                Fator de preço — Dark Net (CN$ por ponto de dificuldade)
+                <input type="number" id="input-fator-preco-darknet" value="50" min="0" step="1" style="width:70px;margin-left:8px;" title="Quantos CN$ de diferença em relação ao item mais barato cadastrado em Creators/BlackPrint equivalem a +1 de dificuldade no sorteio (botão 🎲 dessas credenciais). Padrão sugerido: 50.">
+            </label>
+        </div>
+        <div id="mestre-corpo-topo" class="mestre-corpo-topo" style="display:none;">
+            <span id="mestre-corpo-titulo"></span>
+            <button id="mestre-corpo-fechar" class="combate-fechar" type="button" aria-label="Minimizar">×</button>
+        </div>
+        <div id="mestre-corpo" class="drawer-mestre-corpo"></div>
+    </div>
+    <div class="drawer-pendentes-topo">
+        <h4>Ações Pendentes</h4>
+        <button id="drawer-pendentes-fechar" class="btn-ghost" type="button"><i data-lucide="x"></i></button>
+    </div>
+    <div id="drawer-pendentes-corpo" class="drawer-pendentes-corpo"></div>
+</aside>
+
+<div id="efeito-dano-overlay" class="efeito-dano-overlay"></div>
+
+<!-- ===================== AÇÕES RÁPIDAS (últimas 2 ações de combate, botões redondos flutuantes) ===================== -->
+<div id="app" class="app-shell" style="display:none;">
+
+    <!-- ===================== TOPO ===================== -->
+    <header class="topbar panel">
+        <div class="topbar-id">
+            <span class="eyebrow">Caminhante ativo</span>
+            <h1 id="nome-ficha-ativa">—</h1>
+        </div>
+
+        <div class="topbar-vitals" id="topbar-vitals">
+            <div class="vital-bar-group">
+                <div class="vital-bar-row" data-vital="pv">
+                    <span class="vital-bar-label">PV</span>
+                    <div class="vital-bar-track">
+                        <div class="vital-bar-fill" id="vital-pv-fill"></div>
+                    </div>
+                    <span class="vital-bar-numero" id="vital-pv-numero">—/—</span>
+                </div>
+                <div class="vital-bar-row" data-vital="energia">
+                    <span class="vital-bar-label">EN</span>
+                    <div class="vital-bar-track">
+                        <div class="vital-bar-fill" id="vital-energia-fill"></div>
+                    </div>
+                    <span class="vital-bar-numero" id="vital-energia-numero">—/—</span>
+                </div>
+            </div>
+            <!-- Carrossel de status ativos (Machucado, Sangrando, Derrubado,
+                 Inconsciente, Abstinência etc.) — troca de status a cada 1s,
+                 ver configurarStatusTopoCarrossel/coletarStatusAtivosTopo em
+                 ficha.js. Só aparece quando há pelo menos um status ativo. -->
+            <div class="vital-status-carrossel" id="vital-status-carrossel" style="display:none;">
+                <span class="vital-status-icone" id="vital-status-icone">⚠️</span>
+                <span class="vital-status-texto" id="vital-status-texto">—</span>
+            </div>
+
+            <div class="vital-equipados" id="vital-equipados" title="Itens equipados"></div>
+        </div>
+
+        <div class="topbar-actions">
+            <button id="btn-abrir-info-topo" class="btn-ghost" type="button" title="Mais opções">
+                <i data-lucide="menu"></i>
+            </button>
+            <button id="btn-abrir-mapa" class="btn-ghost" type="button">Mapa</button>
+            <button id="btn-logout" class="btn-ghost" type="button">Sair</button>
+        </div>
+    </header>
+
+    <!-- ===================== PAINEL DE INFO DO TOPO (janela deslizante) =====================
+         Guarda tudo que não precisa ficar sempre visível: cargo/mesa/godmode,
+         o seletor de ficha do Mestre e o botão de atuar como NPC, o indicador
+         de sincronização e os botões de Gerenciador de Combate / Gerenciador
+         de Cenário. O Painel do Mestre em si mora dentro da gaveta de Ações
+         Pendentes (ver #drawer-pendentes), já visível sem precisar abrir
+         nada. A topbar em si (nome + barras de
+         vida/energia + itens equipados + Mapa/Sair) fica fixa no topo o
+         tempo todo. -->
+    <div id="painel-info-topo" class="painel-info-topo panel">
+        <div class="painel-info-topo-linha">
+            <span class="badge" id="user-role">—</span>
+            <span class="badge" id="mesa-indicador" title="Mesa ativa nesta sessão — clique para ver o Registro de Sessões" style="cursor:pointer;">—</span>
+            <span class="badge mestre" id="godmode-indicador" style="display:none;">Godmode ativo</span>
+            <span id="sync-indicator" class="sync-indicator" title="Status de sincronização">●</span>
+        </div>
+
+        <div id="painel-mestre-seletor" style="display:none;">
+            <select id="select-ficha">
+                <option value="">-- Escolha uma ficha da rede --</option>
+            </select>
+            <select id="select-npc-atuar" title="Abre a ficha completa do NPC pra você agir por ele (perícias, manobras de combate, itens/armas)">
+                <option value="">-- Ou atue como um NPC --</option>
+            </select>
+        </div>
+
+        <div class="painel-info-topo-botoes">
+            <button id="btn-abrir-combate" class="btn-red" type="button" style="display:none;">Gerenciador de Combate</button>
+            <button id="btn-abrir-cenario" class="btn-red" type="button" style="display:none;">Gerenciador de Cenário</button>
+        </div>
+    </div>
+
+    <!-- ===================== CORPO: calendário + conteúdo ===================== -->
+    <div class="app-body">
+
+        <!-- ===== CALENDÁRIO (lateral esquerda) ===== -->
+        <aside class="calendario-lateral panel" id="calendario-lateral">
+            <div class="section-header">Calendário</div>
+            <div class="calendario-campo">
+                <span class="calendario-label">Data</span>
+                <span class="calendario-valor" id="cal-data">—</span>
+            </div>
+            <div class="calendario-campo">
+                <span class="calendario-label">Dia da semana</span>
+                <span class="calendario-valor" id="cal-dia-semana">—</span>
+            </div>
+            <div class="calendario-campo">
+                <span class="calendario-label">Hora</span>
+                <span class="calendario-valor" id="cal-hora">—</span>
+            </div>
+            <div class="calendario-campo">
+                <span class="calendario-label">Temperatura</span>
+                <span class="calendario-valor" id="cal-temperatura">—</span>
+            </div>
+            <div class="calendario-campo">
+                <span class="calendario-label">Clima</span>
+                <span class="calendario-valor" id="cal-clima">—</span>
+            </div>
+            <div id="calendario-edicao-mestre" style="display:none;">
+                <div class="section-header">Editar (Mestre)</div>
+                <div class="modal-field">
+                    <label for="cal-edit-data">Data</label>
+                    <input type="text" id="cal-edit-data" placeholder="01/01/2077">
+                </div>
+                <div class="modal-field">
+                    <label for="cal-edit-dia-semana">Dia da semana</label>
+                    <select id="cal-edit-dia-semana"></select>
+                </div>
+                <div class="modal-field">
+                    <label for="cal-edit-hora">Hora</label>
+                    <input type="text" id="cal-edit-hora" placeholder="08:00">
+                </div>
+                <div class="modal-field">
+                    <label for="cal-edit-temp">Temperatura (°C)</label>
+                    <input type="text" id="cal-edit-temp" placeholder="ex: -5">
+                </div>
+                <div class="modal-field">
+                    <label for="cal-edit-clima">Clima</label>
+                    <select id="cal-edit-clima"></select>
+                </div>
+                <button id="btn-salvar-calendario" class="btn-blue" type="button">Salvar calendário</button>
+                <button id="btn-passar-dia" class="btn-lime" type="button">Passar o dia</button>
+                <button id="btn-timeskip" class="btn-blue" type="button">Timeskip</button>
+            </div>
+        </aside>
+
+        <!-- ===== CONTEÚDO PRINCIPAL ===== -->
+        <div class="conteudo-principal">
+
+            <!-- ===================== AVISO DE CRIAÇÃO PENDENTE ===================== -->
+            <div class="panel aviso-criacao" id="aviso-criacao-pendente" style="display:none;">
+                <span class="eyebrow">Criação de personagem incompleta</span>
+                <p>Termine de criar seu Caminhante antes de seguir pra mesa.</p>
+                <button id="btn-continuar-criacao" class="btn-lime" type="button">Continuar criação</button>
+            </div>
+
+            <!-- ===================== ABAS ===================== -->
+            <!-- Duas camadas: categoria (grupo) + sub-aba dentro da
+                 categoria — ver montarNavegacaoAbas()/CATEGORIAS_ABAS em
+                 ficha.js. Cada metade da tela (normal = só "principal";
+                 com Tela Dividida ligada = "principal" + "secundaria")
+                 tem seu próprio bloco de navegação, independente um do
+                 outro. -->
+            <div class="paineis-controles">
+                <button class="tabs-controle-btn" id="btn-tela-dividida" type="button" title="Mostrar duas abas ao mesmo tempo, uma em cima e outra embaixo">
+                    <i data-lucide="rows-2"></i> Tela dividida
+                </button>
+            </div>
+
+            <div class="paineis-area" id="paineis-area">
+
+                <div class="painel-slot" id="slot-principal">
+                    <nav class="tabs-nav-bloco panel" id="nav-principal" data-slot="principal">
+                        <div class="categorias-nav" id="categorias-nav-principal">
+                            <button class="categoria-btn active" data-categoria="personagem" type="button">Personagem</button>
+                            <button class="categoria-btn" data-categoria="recursos" type="button">Recursos</button>
+                            <button class="categoria-btn" data-categoria="jogo" type="button">Jogo</button>
+                            <button class="categoria-btn" data-categoria="progresso" type="button">Progresso</button>
+                        </div>
+                        <div class="tabs-nav" id="tabs-nav-principal">
+                            <button class="tab-btn active" data-tab="perfil" data-categoria="personagem" type="button">Perfil</button>
+                            <button class="tab-btn" data-tab="atributos" data-categoria="personagem" type="button">Atributos</button>
+                            <button class="tab-btn" data-tab="pericias" data-categoria="personagem" type="button">Perícias</button>
+                            <button class="tab-btn" data-tab="vant-desv" data-categoria="personagem" type="button">Vantagens / Desvantagens</button>
+                            <button class="tab-btn" data-tab="especializacoes" data-categoria="personagem" type="button">Especializações</button>
+                            <button class="tab-btn" data-tab="inventario" data-categoria="recursos" type="button">Inventário</button>
+                            <button class="tab-btn" data-tab="financas" data-categoria="recursos" type="button">Finanças</button>
+                            <button class="tab-btn" data-tab="receitas" data-categoria="recursos" type="button">Receitas</button>
+                            <button class="tab-btn" data-tab="darknet" data-categoria="recursos" type="button">Dark Net</button>
+                            <button class="tab-btn" data-tab="combate" data-categoria="jogo" type="button">Combate</button>
+                            <button class="tab-btn" data-tab="saude" data-categoria="jogo" type="button">Saúde</button>
+                            <button class="tab-btn" data-tab="veiculos" data-categoria="jogo" type="button">Veículos</button>
+                            <button class="tab-btn" data-tab="cenario" data-categoria="jogo" type="button">Cenário</button>
+                            <button class="tab-btn" data-tab="treinamento" data-categoria="progresso" type="button">Treinamento / Estudo</button>
+                            <button class="tab-btn" data-tab="notas" data-categoria="progresso" type="button">Determinações / Notas</button>
+                        </div>
+                    </nav>
+
+                    <main class="tab-panels" id="tab-panels-principal">
+
+                <!-- ===================== PERFIL ===================== -->
+                <section class="tab-panel active panel" data-tab="perfil">
+                    <div class="section-header">Dados pessoais</div>
+                    <div class="grid-form">
+                        <div class="campo largo">
+                            <label for="f-nome">Nome</label>
+                            <input type="text" id="f-nome" data-field="nome">
+                        </div>
+                        <div class="campo">
+                            <label for="f-vulgo">Vulgo</label>
+                            <input type="text" id="f-vulgo" data-field="vulgo">
+                        </div>
+                        <div class="campo curto">
+                            <label for="f-idade">Idade</label>
+                            <input type="number" id="f-idade" data-field="idade">
+                        </div>
+                        <div class="campo">
+                            <label for="f-nacionalidade">Nacionalidade</label>
+                            <input type="text" id="f-nacionalidade" data-field="nacionalidade">
+                        </div>
+                        <div class="campo">
+                            <label for="f-funcao">Função</label>
+                            <input type="text" id="f-funcao" data-field="funcao" disabled>
+                        </div>
+                    </div>
+
+                    <div class="section-header">Caráter</div>
+                    <div class="grid-form grid-3">
+                        <div class="campo">
+                            <label for="f-maldade">Maldade <span class="hint-inline">(0–10)</span></label>
+                            <input type="number" id="f-maldade" data-field="maldade" min="0" max="10">
+                        </div>
+                        <div class="campo">
+                            <label for="f-remorso">Remorso <span class="hint-inline">(0–10)</span></label>
+                            <input type="number" id="f-remorso" data-field="remorso" min="0" max="10">
+                        </div>
+                        <div class="campo">
+                            <label for="f-status">Status</label>
+                            <input type="number" id="f-status" data-field="status" min="0">
+                        </div>
+                    </div>
+
+                    <div class="section-header">Progressão</div>
+                    <div class="grid-form grid-4">
+                        <div class="campo">
+                            <label for="f-nivel">Nível</label>
+                            <input type="number" id="f-nivel" data-field="nivel" min="1" max="10">
+                        </div>
+                        <div class="campo">
+                            <label for="f-xp">XP</label>
+                            <input type="number" id="f-xp" data-field="xp" min="0">
+                        </div>
+                    </div>
+                    <div class="hint" id="hint-nivel-xp" style="display:none;">Nível e XP são ajustados pelo Mestre.</div>
+
+                    <!-- Histórico de XP (plano-registro-xp.txt): registros de
+                         cada "Dar XP" feito pelo Mestre, com título, valor e
+                         data — visível pro Mestre e pro jogador dono da
+                         ficha, pra responder "já dei o XP dessa sessão?" sem
+                         depender de memória. Preenchido em tempo real por
+                         configurarXpHistorico (ficha.js). -->
+                    <details class="xp-historico">
+                        <summary>Histórico de XP (<span id="xp-historico-contador">0</span>)</summary>
+                        <ul id="xp-historico-lista"></ul>
+                    </details>
+                </section>
+
+                <!-- ===================== FINANÇAS ===================== -->
+                <section class="tab-panel panel" data-tab="financas">
+                    <div class="section-header">Saldos <span class="hint-inline" id="financas-saldo-hint">apenas o Mestre pode editar os saldos</span></div>
+                    <div class="grid-form grid-4" id="financas-saldos-grid"></div>
+                    <button id="btn-add-saldo" class="btn-ghost" type="button">+ Criar novo saldo</button>
+
+                    <div id="financas-gastar-bloco" style="display:none;">
+                        <div class="section-header">Gastar dinheiro <span class="hint-inline">pedido precisa de aprovação do Mestre</span></div>
+                        <div class="grid-form grid-4">
+                            <div class="campo">
+                                <label for="financas-gastar-origem">De onde sai</label>
+                                <select id="financas-gastar-origem"></select>
+                            </div>
+                            <div class="campo">
+                                <label for="financas-gastar-valor">Valor</label>
+                                <input type="number" id="financas-gastar-valor" min="0" value="0">
+                            </div>
+                        </div>
+                        <button id="financas-gastar-btn" class="btn-red" type="button">Solicitar gasto ao Mestre</button>
+                        <button id="financas-transformar-item-btn" class="btn-ghost" type="button" title="Transforma o valor num item de dinheiro físico no inventário, em vez de gastar — pode ser dado a outro personagem depois">Transformar em item</button>
+                    </div>
+
+                    <div id="financas-mover-bloco" style="display:none;">
+                        <div class="section-header">Mover dinheiro entre saldos <span class="hint-inline">pedido precisa de aprovação do Mestre</span></div>
+                        <div class="grid-form grid-4">
+                            <div class="campo">
+                                <label for="financas-mover-origem">De</label>
+                                <select id="financas-mover-origem"></select>
+                            </div>
+                            <div class="campo">
+                                <label for="financas-mover-destino">Para</label>
+                                <select id="financas-mover-destino"></select>
+                            </div>
+                            <div class="campo">
+                                <label for="financas-mover-valor">Valor</label>
+                                <input type="number" id="financas-mover-valor" min="0" value="0">
+                            </div>
+                        </div>
+                        <button id="financas-mover-btn" class="btn-red" type="button">Solicitar movimentação ao Mestre</button>
+                    </div>
+
+                    <div class="section-header">Padrão de vida <span class="hint-inline">custo semanal cobrado todo Domingo</span></div>
+                    <div class="grid-form grid-4">
+                        <div class="campo largo">
+                            <label for="f-padrao-vida">Padrão de vida</label>
+                            <select id="f-padrao-vida" data-field="padraoDeVida"></select>
+                        </div>
+                    </div>
+                    <div class="hint">Custo semanal atual: <strong id="resumo-custo-semanal">—</strong></div>
+
+                    <div class="section-header">Gastos extras semanais <span class="hint-inline">além do padrão de vida</span></div>
+                    <ul class="entity-list" id="lista-gastos-extras"></ul>
+                    <button id="btn-add-gasto" class="btn-lime" type="button">+ Adicionar gasto</button>
+
+                    <div class="section-header">Ganho fixo semanal <span class="hint-inline">creditado automaticamente todo Domingo</span></div>
+                    <p class="hint">Renda fixa (salário, aluguel recebido, etc) definida pelo Mestre. Ela é somada em "Dinheiro limpo na conta" toda vez que o Mestre avança o calendário pra um Domingo — sem precisar de aprovação.</p>
+                    <div class="grid-form grid-4">
+                        <div class="campo">
+                            <label for="financas-ganho-fixo">Valor do ganho fixo</label>
+                            <input type="number" id="financas-ganho-fixo" min="0" value="0">
+                        </div>
+                    </div>
+                    <button id="financas-ganho-fixo-salvar" class="btn-lime" type="button">Salvar ganho fixo</button>
+                </section>
+
+                <!-- ===================== ATRIBUTOS ===================== -->
+                <section class="tab-panel panel" data-tab="atributos">
+                    <div class="section-header">Atributos primários <span class="hint-inline">editáveis só na Criação, Level Up ou Treinamento · limite humano 7</span></div>
+                    <div class="grid-atributos" id="grid-atributos-primarios"></div>
+
+                    <div class="section-header">Recursos vitais</div>
+                    <div class="grid-recursos" id="grid-recursos"></div>
+                    <div class="estado-saude-badge" id="estado-saude-badge" style="display:none;"></div>
+                    <div class="estado-saude-badge estado-energia-badge" id="estado-energia-badge" style="display:none;"></div>
+                    <div class="estado-saude-badge muito-machucado" id="coma-badge" style="display:none;"></div>
+                    <div class="estado-saude-badge" id="desmaio-badge" style="display:none;"></div>
+
+                    <!-- Recuperação de PVs (manual): tempo de recuperação proporcional
+                         à % de PV perdido (ver calcularTempoRecuperacaoPV em regras.js).
+                         Só começa a valer depois que o Mestre aprova o pedido na fila de
+                         Ações Pendentes — ver configurarRecuperacaoPV em ficha.js. -->
+                    <div class="recuperacao-pv-painel" id="recuperacao-pv-painel" style="display:none;">
+                        <p class="hint" id="recuperacao-pv-status"></p>
+                        <div class="recuperacao-pv-modo" id="recuperacao-pv-modo">
+                            <label class="radio-inline">
+                                <input type="radio" name="recuperacao-pv-modo" id="recuperacao-pv-modo-padrao" value="padrao_vida" checked>
+                                Padrão de Vida
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" name="recuperacao-pv-modo" id="recuperacao-pv-modo-tratamento" value="tratamento">
+                                Tratamento médico
+                            </label>
+                        </div>
+                        <div class="recuperacao-pv-checkboxes" id="recuperacao-pv-checkboxes" style="display:none;">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" id="recuperacao-pv-especializado">
+                                Tratamento especializado (-1/10 no tempo)
+                            </label>
+                            <label class="checkbox-inline">
+                                <input type="checkbox" id="recuperacao-pv-hospital">
+                                Em hospital (-1/10 no tempo)
+                            </label>
+                        </div>
+                        <button id="btn-solicitar-recuperacao-pv" class="btn-lime" type="button" style="display:none;">Solicitar recuperação de PVs ao Mestre</button>
+                    </div>
+
+                    <div class="section-header">Atributos secundários (calculados) <span class="hint-inline">base do manual + modificadores de itens/vantagens/desvantagens/especializações</span></div>
+                    <div class="grid-atributos" id="grid-atributos-secundarios"></div>
+
+                    <div class="hint">
+                        Os valores secundários são calculados automaticamente: fórmula do manual + soma de todos
+                        os modificadores ativos vindos de inventário, vantagens, desvantagens e especializações.
+                        Clique em um valor calculado pra ver o detalhamento da conta.
+                    </div>
+                </section>
+
+                <!-- ===================== PERÍCIAS ===================== -->
+                <section class="tab-panel panel" data-tab="pericias">
+                    <div class="section-header">Perícias <span class="hint-inline">nível de 0 a 5 · lista fechada do manual</span></div>
+                    <div class="hint">
+                        Perícias são travadas pra edição fora da Criação, Level Up ou Treinamento.
+                        O total de rolagem mostrado é só o nível da perícia (+ modificadores), sem somar o atributo.
+                    </div>
+                    <ul class="entity-list" id="lista-pericias"></ul>
+                    <button id="btn-add-pericia" class="btn-lime" type="button">+ Adicionar perícia</button>
+                </section>
+
+                <!-- ===================== INVENTÁRIO ===================== -->
+                <section class="tab-panel panel" data-tab="inventario">
+                    <div class="section-header">Capacidade de carga</div>
+                    <div class="hint" id="resumo-carga">—</div>
+                    <div class="hint" id="resumo-maos">—</div>
+
+                    <div class="inventario-categorias" id="inventario-categorias-nav"></div>
+                    <button id="btn-add-categoria" class="btn-ghost" type="button">+ Nova categoria</button>
+
+                    <div id="inventario-listas"></div>
+
+                    <button id="btn-add-item" class="btn-lime" type="button">+ Adicionar item</button>
+                </section>
+
+                <!-- ===================== COMBATE ===================== -->
+                <section class="tab-panel panel" data-tab="combate">
+                    <div class="section-header">Armas equipadas <span class="hint-inline">itens do inventário com a tag "Arma"</span></div>
+                    <ul class="entity-list" id="lista-armas-combate"></ul>
+
+                    <div class="section-header">Manobras de combate <span class="hint-inline">lista fixa do manual</span></div>
+                    <ul class="entity-list manobras-list" id="lista-manobras-combate"></ul>
+                </section>
+
+                <!-- ===================== SAÚDE ===================== -->
+                <!-- Feridas persistentes (ver plano-sistema-saude-ferimentos.txt).
+                     Etapa 5 do plano: Testar Infecção migrado pra cá (por
+                     ferida, só o Mestre) e removido do Gerenciador de
+                     Combate — ver botaoTestarInfeccao/abrirModalTestarInfeccaoFerida
+                     em ficha.js. -->
+                <section class="tab-panel panel" data-tab="saude">
+                    <div class="section-header">Feridas <span class="hint-inline">criadas automaticamente por golpes perfurantes/cortantes mirados e tiros — fraturas e queimaduras são lançadas manualmente pelo Mestre</span></div>
+                    <div class="hint">Recuperação de PV fica bloqueada enquanto houver ferida que não esteja no estado "Tratada". Qualquer jogador com a perícia médica necessária pode tratar outro jogador.</div>
+                    <button id="btn-tratar-outro-jogador" class="btn-ghost" type="button">🩺 Tratar outro jogador</button>
+                    <button id="btn-mestre-aplicar-ferida" class="btn-ghost" type="button" style="display:none;">➕ Aplicar ferida</button>
+                    <div id="mestre-coma-painel" style="display:none;"></div>
+                    <div id="mestre-desmaio-painel" style="display:none;"></div>
+
+                    <!-- Silhueta visual (plano-silhueta-saude.txt, Fase 2): SVG
+                         inline de corpo humano com 10 zonas clicáveis. Vista de
+                         frente — "esquerdo/direito" é sempre do PERSONAGEM, não
+                         de quem olha a tela, então o braço/perna direito do
+                         personagem aparece do lado esquerdo do desenho (e
+                         vice-versa). Fases 3-6 (agregação de feridas por zona,
+                         cores, caixinha flutuante, amputação) entram por cima
+                         desta base, sem mudar os ids/data-zona abaixo. -->
+                    <div id="saude-silhueta-wrap" class="saude-silhueta-wrap">
+                        <svg id="saude-silhueta-svg" class="saude-silhueta-svg" viewBox="0 0 200 400" role="img" aria-label="Silhueta do corpo do personagem — clique numa parte para ver as feridas daquele local">
+                            <ellipse id="zona-cabeca" class="zona-corpo" data-zona="cabeca" cx="100" cy="32" rx="26" ry="30"></ellipse>
+                            <path id="zona-torso" class="zona-corpo" data-zona="torso" d="M70,68 L130,68 L138,190 Q100,206 62,190 Z"></path>
+                            <rect id="zona-braco-direito" class="zona-corpo" data-zona="braco_direito" x="34" y="72" width="26" height="120" rx="12"></rect>
+                            <rect id="zona-braco-esquerdo" class="zona-corpo" data-zona="braco_esquerdo" x="140" y="72" width="26" height="120" rx="12"></rect>
+                            <ellipse id="zona-mao-direita" class="zona-corpo" data-zona="mao_direita" cx="47" cy="204" rx="14" ry="16"></ellipse>
+                            <ellipse id="zona-mao-esquerda" class="zona-corpo" data-zona="mao_esquerda" cx="153" cy="204" rx="14" ry="16"></ellipse>
+                            <rect id="zona-perna-direita" class="zona-corpo" data-zona="perna_direita" x="66" y="192" width="30" height="150" rx="14"></rect>
+                            <rect id="zona-perna-esquerda" class="zona-corpo" data-zona="perna_esquerda" x="104" y="192" width="30" height="150" rx="14"></rect>
+                            <ellipse id="zona-pe-direita" class="zona-corpo" data-zona="pe_direita" cx="81" cy="354" rx="18" ry="12"></ellipse>
+                            <ellipse id="zona-pe-esquerda" class="zona-corpo" data-zona="pe_esquerda" cx="119" cy="354" rx="18" ry="12"></ellipse>
+                            <!-- Overlays (ícone de estado + badge de contagem, Fase
+                                 4) desenhados por cima das zonas — ver
+                                 renderizarSilhuetaSaude em ficha.js. Grupo próprio
+                                 pra ficar sempre acima das formas e ser redesenhado
+                                 do zero a cada mudança em feridasCache sem mexer
+                                 nas zonas clicáveis. -->
+                            <g id="saude-silhueta-overlays" aria-hidden="true"></g>
+                        </svg>
+                        <div id="saude-silhueta-legenda" class="hint saude-silhueta-legenda">Clique numa parte do corpo para ver as feridas daquele local.</div>
+
+                        <!-- Caixinha flutuante (plano-silhueta-saude.txt, Fase 5):
+                             popover posicionado por JS (left/top calculados a
+                             partir de CENTROS_ZONA_SILHUETA) com uma seta CSS
+                             (.saude-silhueta-popover-seta) apontando pro
+                             marcador clicado. Reaproveita acoesDeTratamentoParaFerida
+                             e abrirModalTratarFerida — não duplica lógica de
+                             tratamento, só mostra os mesmos botões da lista de
+                             cards abaixo dentro desta caixinha. -->
+                        <div id="saude-silhueta-popover" class="saude-silhueta-popover" style="display:none;">
+                            <div class="saude-silhueta-popover-seta"></div>
+                            <button type="button" id="saude-silhueta-popover-fechar" class="saude-silhueta-popover-fechar" aria-label="Fechar">×</button>
+                            <div id="saude-silhueta-popover-corpo" class="saude-silhueta-popover-corpo"></div>
+                        </div>
+                    </div>
+
+                    <div id="saude-lista"></div>
+
+                    <!-- Implantes/Próteses (ver plano-implantes-biomecanica.txt,
+                         Fase 6/9): testes de adaptação pós-cirurgia, feitos pelo
+                         próprio dono da ficha, sozinho (sem terceiro). Contador
+                         de limite (Fase 9.3) e modificadores formatados — só
+                         "chip" fica de fora da conta (subtipoContaComoImplante,
+                         dados-manual.js). -->
+                    <div class="section-header">Implantes <span class="hint-inline">testes de adaptação pós-cirurgia — só o dono da ficha rola</span></div>
+                    <div class="hint" id="implantes-contador"></div>
+                    <div id="implantes-lista"></div>
+                    <div id="implantes-pendentes-mestre"></div>
+                </section>
+
+                <!-- ===================== VEÍCULOS ===================== -->
+                <section class="tab-panel panel" data-tab="veiculos">
+                    <div class="section-header">Veículos</div>
+                    <div class="hint">Só o Mestre pode cadastrar ou editar os atributos de um veículo. Os valores abaixo já vêm calculados a partir da escala do manual (pág. 36-43).</div>
+                    <div id="veiculos-lista"></div>
+                    <button id="btn-add-veiculo" class="btn-lime" type="button">+ Adicionar veículo</button>
+                </section>
+
+                <!-- ===================== CENÁRIO ===================== -->
+                <!-- Espelha os cenários da mesa (ver plano-cenario.txt). Jogador só
+                     vê os cenários onde a própria ficha está listada como
+                     participante; o Mestre vê todos (edição fica no Gerenciador
+                     de Cenário, não aqui). -->
+                <section class="tab-panel panel" data-tab="cenario">
+                    <div class="section-header">Cenário</div>
+                    <div class="hint">Mostra os cenários em que você está presente no momento. Itens e veículos aqui pertencem à cena, não à sua ficha, até você pegá-los.</div>
+                    <div id="cenario-lista"></div>
+                </section>
+
+                <!-- ===================== VANTAGENS / DESVANTAGENS ===================== -->
+                <section class="tab-panel panel" data-tab="vant-desv">
+                    <div class="hint">Vantagens, Desvantagens e Fatos Universais só podem ser adicionados/removidos livremente durante a Criação de Personagem. Depois disso, só o Mestre pode alterá-los.</div>
+                    <div class="section-header">Vantagens</div>
+                    <ul class="entity-list" id="lista-vantagens"></ul>
+                    <button id="btn-add-vantagem" class="btn-lime" type="button">+ Adicionar vantagem</button>
+
+                    <div class="section-header">Desvantagens <span class="hint-inline">3 pontos extras cada · máx. 3 pontos extras no total</span></div>
+                    <ul class="entity-list" id="lista-desvantagens"></ul>
+                    <button id="btn-add-desvantagem" class="btn-red" type="button">+ Adicionar desvantagem</button>
+
+                    <div id="bonus-desvantagens-area"></div>
+
+                    <div class="section-header">Fatos universais</div>
+                    <ul class="entity-list" id="lista-fatos"></ul>
+                    <button id="btn-add-fato" class="btn-blue" type="button">+ Adicionar fato universal</button>
+                </section>
+
+                <!-- ===================== ESPECIALIZAÇÕES ===================== -->
+                <section class="tab-panel panel" data-tab="especializacoes">
+                    <div class="section-header">Especializações <span class="hint-inline">de perícia (a cada 3) ou de atributo (níveis 3, 6 e 9)</span></div>
+                    <ul class="entity-list" id="lista-especializacoes"></ul>
+                    <button id="btn-add-especializacao" class="btn-lime" type="button">+ Adicionar especialização</button>
+                </section>
+
+                <!-- ===================== TREINAMENTO / ESTUDO ===================== -->
+                <section class="tab-panel panel" data-tab="treinamento">
+                    <div class="section-header">Treinamento simultâneo <span class="hint-inline">1 perícia física + 1 perícia mental + 1 atributo físico + 1 atributo mental</span></div>
+                    <div class="hint">O Mestre confirma o avanço de +1 dia sempre que clicar em "Passar o Dia" no calendário.</div>
+                    <label id="linha-esteroides" title="Regra do Esteroide (manual, catálogo de drogas): eleva o limite de Força e Constituição de 7 para 9, mas só através de treinamento — subir de nível continua travado em 7 normalmente.">
+                        <input type="checkbox" id="chk-usa-esteroides">
+                        Usa Esteroide <span class="hint-inline">(libera treinar Força/Constituição até 9 — só o Mestre marca)</span>
+                    </label>
+                    <div class="treino-grid" id="treino-grid"></div>
+                </section>
+
+                <!-- ===================== RECEITAS ===================== -->
+                <section class="tab-panel panel" data-tab="receitas">
+                    <div class="section-header">Receitas <span class="hint-inline">de cada perícia de criação de item que o personagem tiver</span></div>
+                    <div class="hint">Aparece aqui uma seção pra cada perícia de criação (Ferramenta de Criação geral: Mecânica Automotiva, Armeiro, Ofícios Utilitários, Explosivos, Eletrônica; ou Ferramenta de Criação Química: Química) que estiver cadastrada nesta ficha, com a lista de receitas conhecidas logo abaixo.</div>
+                    <div id="receitas-lista"></div>
+                </section>
+
+                <!-- ===================== DARK NET ===================== -->
+                <section class="tab-panel panel" data-tab="darknet">
+                    <div class="section-header">Dark Net</div>
+                    <div class="darknet-credencial-adicionar">
+                        <select id="darknet-credencial-site-select" title="Escolha o site"></select>
+                        <button id="btn-add-credencial-darknet" class="btn-lime" type="button">+ Adicionar credenciais</button>
+                    </div>
+                    <div class="darknet-grid" id="darknet-grid"></div>
+                </section>
+
+                <!-- ===================== NOTAS ===================== -->
+                <section class="tab-panel panel" data-tab="notas">
+                    <div class="section-header">Determinações <span class="hint-inline">princípios, vínculos e objetivos que seu personagem não abandona</span></div>
+                    <div class="hint-inline" id="determinacoes-nivel-aviso"></div>
+                    <div class="determinacoes-rolagem" id="determinacoes-rolagem">
+                        <button id="btn-determinacao-anterior" class="btn-ghost" type="button" title="Rolar para a caixa preenchida anterior">▲ anterior</button>
+                        <span class="hint-inline" id="determinacoes-rolagem-contador"></span>
+                        <button id="btn-determinacao-proxima" class="btn-ghost" type="button" title="Rolar para a próxima caixa preenchida">▼ próxima</button>
+                    </div>
+                    <div class="determinacoes-lista" id="determinacoes-lista"></div>
+
+                    <div class="section-header">Notas livres / Background</div>
+                    <textarea id="f-notas" data-field="notas" placeholder="Histórico, contatos, anotações de mesa..." style="min-height:160px;"></textarea>
+                </section>
+
+            </main>
+
+                </div>
+
+                <div class="painel-slot" id="slot-secundario" hidden>
+                    <nav class="tabs-nav-bloco panel" id="nav-secundaria" data-slot="secundario">
+                        <div class="categorias-nav" id="categorias-nav-secundaria">
+                            <button class="categoria-btn" data-categoria="personagem" type="button">Personagem</button>
+                            <button class="categoria-btn active" data-categoria="recursos" type="button">Recursos</button>
+                            <button class="categoria-btn" data-categoria="jogo" type="button">Jogo</button>
+                            <button class="categoria-btn" data-categoria="progresso" type="button">Progresso</button>
+                        </div>
+                        <div class="tabs-nav" id="tabs-nav-secundaria">
+                            <button class="tab-btn" data-tab="perfil" data-categoria="personagem" type="button">Perfil</button>
+                            <button class="tab-btn" data-tab="atributos" data-categoria="personagem" type="button">Atributos</button>
+                            <button class="tab-btn" data-tab="pericias" data-categoria="personagem" type="button">Perícias</button>
+                            <button class="tab-btn" data-tab="vant-desv" data-categoria="personagem" type="button">Vantagens / Desvantagens</button>
+                            <button class="tab-btn" data-tab="especializacoes" data-categoria="personagem" type="button">Especializações</button>
+                            <button class="tab-btn active" data-tab="inventario" data-categoria="recursos" type="button">Inventário</button>
+                            <button class="tab-btn" data-tab="financas" data-categoria="recursos" type="button">Finanças</button>
+                            <button class="tab-btn" data-tab="receitas" data-categoria="recursos" type="button">Receitas</button>
+                            <button class="tab-btn" data-tab="darknet" data-categoria="recursos" type="button">Dark Net</button>
+                            <button class="tab-btn" data-tab="combate" data-categoria="jogo" type="button">Combate</button>
+                            <button class="tab-btn" data-tab="saude" data-categoria="jogo" type="button">Saúde</button>
+                            <button class="tab-btn" data-tab="veiculos" data-categoria="jogo" type="button">Veículos</button>
+                            <button class="tab-btn" data-tab="cenario" data-categoria="jogo" type="button">Cenário</button>
+                            <button class="tab-btn" data-tab="treinamento" data-categoria="progresso" type="button">Treinamento / Estudo</button>
+                            <button class="tab-btn" data-tab="notas" data-categoria="progresso" type="button">Determinações / Notas</button>
+                        </div>
+                    </nav>
+
+                    <main class="tab-panels" id="tab-panels-secundario"></main>
+                </div>
+
+            </div>
+
+            <div class="save-bar">
+                <span id="save-status" class="save-status">sincronizado em tempo real</span>
+                <button id="btn-salvar" class="btn-lime" type="button">Salvar agora</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== LOG DE DADOS (fixo, canto inferior direito) ===================== -->
+<div class="log-dados panel" id="log-dados">
+    <div class="log-dados-header">
+        <div class="log-dados-titulo">
+            <span class="eyebrow">Log de Dados</span>
+            <span class="log-dados-online" id="log-online-count"></span>
+        </div>
+        <button id="btn-toggle-log" class="btn-ghost" type="button" title="Minimizar">—</button>
+    </div>
+    <div class="log-dados-lista-wrap">
+        <ul id="log-dados-lista"></ul>
+    </div>
+    <div class="log-dados-rolador">
+        <input type="number" id="log-rolar-mod" placeholder="Mod." value="0" title="Modificador">
+        <button id="log-rolar-btn" class="btn-lime" type="button">🎲 Rolar d20</button>
+    </div>
+</div>
+
+<!-- ===================== MODAL: WIZARD DE CRIAÇÃO ===================== -->
+<div class="modal-overlay" id="modal-criacao">
+    <div class="modal-content modal-largo">
+        <div class="modal-header-flex">
+            <h4>Criação de Personagem</h4>
+            <button type="button" id="btn-fechar-criacao-temporariamente" class="btn-ghost" title="Fecha o wizard sem perder o progresso. Reabra pelo aviso 'Continuar Criação'.">Fechar temporariamente ✕</button>
+        </div>
+        <div id="criacao-corpo"></div>
+        <div class="modal-btns" id="criacao-botoes"></div>
+    </div>
+</div>
+
+<!-- ===================== MODAL: LEVEL UP (inadiável) ===================== -->
+<div class="modal-overlay" id="modal-levelup">
+    <div class="modal-content modal-largo">
+        <h4>Subiu de Nível!</h4>
+        <div id="levelup-corpo"></div>
+        <div class="modal-btns" id="levelup-botoes"></div>
+    </div>
+</div>
+
+<!-- ===================== MODAL: REGISTRO DE SESSÕES =====================
+     Abre ao clicar no badge "Mesa: {mesaId}" no topo (#mesa-indicador).
+     Lista compartilhada por todos na mesa (calendario.js/sessoes.js
+     mesmo esquema); só o Mestre vê os controles de criar/editar/excluir
+     — ver configurarRegistroSessoes, ficha.js. -->
+<div class="modal-overlay" id="modal-sessoes">
+    <div class="modal-content modal-largo">
+        <div class="modal-header-flex">
+            <h4>Registro de Sessões</h4>
+            <button type="button" id="btn-fechar-sessoes" class="btn-ghost" title="Fechar">Fechar ✕</button>
+        </div>
+        <button type="button" id="btn-nova-sessao" class="btn-lime" style="display:none;">+ Nova sessão</button>
+        <div id="sessoes-form" class="sessoes-form" style="display:none;">
+            <div class="modal-field">
+                <label for="sessao-nome">Nome da sessão</label>
+                <input type="text" id="sessao-nome">
+            </div>
+            <div class="modal-field">
+                <label for="sessao-dia-inicio">Dia ingame — começou</label>
+                <input type="text" id="sessao-dia-inicio" placeholder="Ex: 29/10/2077">
+            </div>
+            <div class="modal-field">
+                <label for="sessao-dia-fim">Dia ingame — terminou</label>
+                <input type="text" id="sessao-dia-fim" placeholder="Ex: 30/10/2077">
+            </div>
+            <div class="modal-field">
+                <label for="sessao-descricao">Descrição</label>
+                <textarea id="sessao-descricao" rows="4"></textarea>
+            </div>
+            <div class="modal-field">
+                <label for="sessao-xp">XP da sessão</label>
+                <input type="number" id="sessao-xp" min="0" step="1" value="0">
+            </div>
+            <div class="modal-btns">
+                <button type="button" id="btn-salvar-sessao" class="btn-lime">Salvar</button>
+                <button type="button" id="btn-cancelar-sessao" class="btn-ghost">Cancelar</button>
+            </div>
+        </div>
+        <ul id="sessoes-lista" class="sessoes-lista"></ul>
+    </div>
+</div>
+
+<!-- ===================== MODAL GENÉRICO DE ENTIDADE ===================== -->
+<div class="modal-overlay" id="modal-entidade">
+    <div class="modal-content">
+        <h4 id="modal-titulo">Item</h4>
+
+        <div class="modal-field">
+            <label for="modal-nome">Nome</label>
+            <input type="text" id="modal-nome">
+            <!-- Só aparece pra itens novos de inventário: autocompletar
+                 puxando do Banco Global de Itens (itens-globais.js). -->
+            <div class="searchable-options" id="modal-item-banco-opcoes" style="display:none;"></div>
+        </div>
+
+        <!-- Desvantagem "Vício": aparece só quando o Nome contém "vício"
+             (ver configurarCampoSubstanciaVicio em ficha.js). Guarda qual
+             droga é o objeto do vício, pra calcular a Abstinência (manual,
+             cap. Drogas) automaticamente e pro botão "Consumir" (aba
+             Inventário) saber qual vício aquele item cura. -->
+        <div class="modal-field" id="modal-campo-substancia-vicio" style="display:none;">
+            <label for="modal-substancia-vicio">Substância (qual droga é o vício)</label>
+            <input type="text" id="modal-substancia-vicio" placeholder="Ex: Cocaína" list="modal-substancia-vicio-opcoes">
+            <datalist id="modal-substancia-vicio-opcoes"></datalist>
+        </div>
+
+        <!-- Especializações: vincula o registro a uma perícia específica
+             da ficha (nível 3+, regra do manual) — puramente informativo/
+             organizacional, não interfere em nenhum cálculo. -->
+        <div class="modal-field" id="modal-campo-especializacao-pericia" style="display:none;">
+            <label for="modal-especializacao-pericia">Perícia vinculada</label>
+            <select id="modal-especializacao-pericia">
+                <option value="">-- nenhuma --</option>
+            </select>
+            <p class="hint">Escolha a perícia (nível 3+) a que esta especialização pertence — só perícias elegíveis aparecem na lista. Serve de organização/exibição; o efeito de verdade continua sendo os modificadores cadastrados abaixo.</p>
+        </div>
+
+        <!-- Inventário: opção de salvar este item no Banco Global -->
+        <div class="modal-field" id="modal-campo-salvar-banco" style="display:none;">
+            <label class="checkbox-inline">
+                <input type="checkbox" id="modal-salvar-banco">
+                Salvar este item no Banco Global (reaproveitar em outras fichas/NPCs)
+            </label>
+        </div>
+
+        <!-- Perícia: dropdown de categoria + dropdown buscável de perícia -->
+        <div class="modal-field" id="modal-campo-categoria-pericia" style="display:none;">
+            <label for="modal-categoria-pericia">Categoria</label>
+            <select id="modal-categoria-pericia"></select>
+        </div>
+        <div class="modal-field" id="modal-campo-pericia-busca" style="display:none;">
+            <label for="modal-pericia-busca">Perícia</label>
+            <input type="text" id="modal-pericia-busca" placeholder="Digite pra buscar...">
+            <div class="searchable-options" id="modal-pericia-opcoes"></div>
+            <input type="hidden" id="modal-pericia-valor">
+        </div>
+
+        <div class="modal-field" id="modal-campo-nivel" style="display:none;">
+            <label for="modal-nivel">Nível (0–5)</label>
+            <input type="number" id="modal-nivel" min="0" max="5" value="0">
+        </div>
+
+        <!-- Inventário: tag + nível de tag + peso + categoria -->
+        <div class="modal-field" id="modal-campo-tag" style="display:none;">
+            <label for="modal-tag">Tag (obrigatória)</label>
+            <select id="modal-tag"></select>
+        </div>
+
+        <!-- Imagem do item (opcional) — miniatura mostrada no inventário.
+             O arquivo é redimensionado no navegador antes de salvar (ver
+             lerImagemDoModal em ficha.js), então não precisa de Firebase
+             Storage nem de regra de acesso nova: a miniatura já sai
+             pequena o bastante pra caber junto do resto do item no banco. -->
+        <div class="modal-field" id="modal-campo-imagem" style="display:none;">
+            <label for="modal-imagem-arquivo">Imagem (opcional)</label>
+            <div class="modal-imagem-linha">
+                <img id="modal-imagem-preview" class="modal-imagem-preview" style="display:none;" alt="Pré-visualização da imagem do item">
+                <div class="modal-imagem-botoes">
+                    <input type="file" id="modal-imagem-arquivo" accept="image/*" style="display:none;">
+                    <button type="button" id="btn-escolher-imagem-item" class="btn-ghost">📷 Escolher imagem</button>
+                    <button type="button" id="btn-remover-imagem-item" class="btn-ghost" style="display:none;">Remover imagem</button>
+                </div>
+            </div>
+            <p class="hint">A imagem é reduzida automaticamente pra uma miniatura pequena antes de salvar.</p>
+        </div>
+        <div class="modal-field" id="modal-campo-nivel-tag" style="display:none;">
+            <label for="modal-nivel-tag">Nível da tag</label>
+            <select id="modal-nivel-tag"></select>
+        </div>
+        <div class="modal-field" id="modal-campo-limitar-rolagem" style="display:none;">
+            <label class="checkbox-inline">
+                <input type="checkbox" id="modal-limitar-rolagem">
+                Limitar rolagem ao nível do item
+            </label>
+            <p class="hint">Se marcado, a rolagem da perícia vinculada usando este item fica travada no Nível da tag acima, mesmo que a perícia do personagem seja maior (ex.: Arrombamento 3 + Destrave nível 2 = rola só com +2).</p>
+        </div>
+        <div class="modal-field" id="modal-campo-instalar-veiculo" style="display:none;">
+            <label for="modal-instalar-veiculo">Instalar em veículo (opcional)</label>
+            <select id="modal-instalar-veiculo">
+                <option value="">-- não montada em nenhum veículo --</option>
+            </select>
+            <p class="hint">Acessório-arma (Truck Pistol, Metralhadora de Teto, Torreta Tática — manual pg. 37-38): monta esta arma no veículo escolhido, consumindo slots iguais ao Nível da tag acima. Só lista veículos com slot livre suficiente (ou o veículo onde ela já está montada, se for o caso). Disparo continua igual ao de qualquer arma — sem regra nova, só o item "morar" no carro em vez de na mão.</p>
+        </div>
+        <div class="modal-field" id="modal-campo-equipavel" style="display:none;">
+            <label class="checkbox-inline">
+                <input type="checkbox" id="modal-equipavel">
+                Item equipável (precisa estar "Levando consigo" e equipado pra poder ser usado — igual arma)
+            </label>
+            <p class="hint">Não marque isso só pra poder segurar o item na mão — qualquer item já pode ficar "na mão" sem essa marcação (veja "Já entra equipado" mais abaixo). Marque só se o item exigir estar equipado antes de poder ser "usado" (rolar a perícia vinculada).</p>
+        </div>
+        <div class="modal-field" id="modal-campo-maos-necessarias" style="display:none;">
+            <label for="modal-maos-necessarias">Mãos necessárias (pra segurar/equipar solto)</label>
+            <select id="modal-maos-necessarias">
+                <option value="1">1 mão</option>
+                <option value="2">2 mãos</option>
+            </select>
+            <p class="hint">Só conta quando o item está de fato equipado/segurado (arma, item equipável comum, ou bolsa de mão) — ver indicador "Mãos livres" no topo do inventário.</p>
+        </div>
+        <div class="modal-field" id="modal-campo-pericia-uso" style="display:none;">
+            <label for="modal-pericia-uso" id="modal-label-pericia-uso">Perícia vinculada (obrigatória)</label>
+            <select id="modal-pericia-uso"></select>
+            <div id="modal-pericia-uso-checkboxes" style="display:none;"></div>
+            <p class="hint" id="hint-pericia-uso-multipla" style="display:none;">Eletrônico pode ficar vinculado a mais de uma perícia — marque as que fizerem sentido pra este item (ex.: um item que serve tanto pra Hackear quanto pra Programar).</p>
+        </div>
+        <div class="hint" id="hint-ferramenta-criacao-geral" style="display:none;">Ferramenta de Criação (geral): o mesmo kit serve pra Explosivos, Mecânica Automotiva, Armeiro, Ofícios Utilitários e Eletrônica — não precisa escolher uma perícia aqui, quem usa o item escolhe na hora de "Usar".</div>
+        <div class="modal-field" id="modal-campo-item-saldo" style="display:none;">
+            <label class="checkbox-inline">
+                <input type="checkbox" id="modal-item-eh-saldo">
+                Funciona como carteira digital (guarda moedas/notas virtuais)
+            </label>
+            <p class="hint">Marque se este eletrônico guarda dinheiro digital (ex.: um pendrive com criptomoeda, um celular com um app de banco). O saldo passa a valer como mais uma "conta" na aba Finanças — some da ficha se o item for perdido, roubado ou destruído.</p>
+            <div id="modal-item-saldo-valor-bloco" style="display:none;">
+                <label for="modal-item-saldo-valor">Saldo atual (CN$)</label>
+                <input type="number" id="modal-item-saldo-valor" min="0" step="1" value="0">
+            </div>
+            <div id="modal-item-saldo-eletronico-bloco" style="display:none;">
+                <p class="hint">Notas e moedas digitais ficam como dois saldos separados deste mesmo item — cada um pode ser gasto/movido à parte na aba Finanças.</p>
+                <label for="modal-item-saldo-notas">Notas (CN$)</label>
+                <input type="number" id="modal-item-saldo-notas" min="0" step="1" value="0">
+                <label for="modal-item-saldo-moedas">Moedas (CN$)</label>
+                <input type="number" id="modal-item-saldo-moedas" min="0" step="1" value="0">
+            </div>
+        </div>
+        <div class="modal-field" id="modal-campo-classe-protecao" style="display:none;">
+            <label for="modal-classe-protecao" id="modal-label-classe-protecao">Classe de Proteção (obrigatória)</label>
+            <select id="modal-classe-protecao"></select>
+        </div>
+        <div class="modal-field" id="modal-campo-calibre" style="display:none;">
+            <label for="modal-calibre">Calibre (obrigatório)</label>
+            <select id="modal-calibre"></select>
+            <p class="hint">Opções filtradas pela Classe de Proteção escolhida acima.</p>
+        </div>
+        <div class="modal-field" id="modal-campo-carregador-capacidade" style="display:none;">
+            <label for="modal-carregador-capacidade">Capacidade do carregador (nº de projéteis)</label>
+            <input type="number" id="modal-carregador-capacidade" min="1" step="1" value="10">
+        </div>
+        <!-- PREPARADO PRA FUTURO — Slots de Equipamento: quando a lista
+             fechada de "lugares no corpo" existir (ver nota grande em
+             SUBTIPOS_PORTE, dados-manual.js), um novo campo "Slot"
+             (mesmo padrão: <select id="modal-slot-porte">) entra logo
+             abaixo deste, dentro de um novo .modal-field próprio. -->
+        <div class="modal-field" id="modal-campo-subtipo-porte" style="display:none;">
+            <label for="modal-subtipo-porte">Tipo de porte (obrigatório)</label>
+            <select id="modal-subtipo-porte"></select>
+            <p class="hint">Como esse recipiente é carregado no corpo — define se ocupa mão. Hoje não há limite de "só 1 equipado por vez": o Mestre acompanha o inventário item a item.</p>
+        </div>
+        <div class="modal-field" id="modal-campo-compartimentos" style="display:none;">
+            <label>Compartimentos (obrigatório pelo menos 1)</label>
+            <p class="hint">Cada compartimento tem sua própria capacidade (volume) e maior tamanho aceito — monte do zero, sem molde fixo (ex.: "Bolso frente esq.", "Bolso de trás"). Uma mochila simples pode ter só 1, chamado "Principal".</p>
+            <div id="modal-lista-compartimentos"></div>
+            <button id="modal-add-compartimento" class="btn-blue" type="button">+ Adicionar compartimento</button>
+        </div>
+        <div class="modal-field" id="modal-campo-projetil-quantidade" style="display:none;">
+            <label for="modal-projetil-quantidade">Quantidade de projéteis (neste item)</label>
+            <input type="number" id="modal-projetil-quantidade" min="0" step="1" value="0">
+            <p class="hint" id="modal-projetil-volume-total">Volume total: 0</p>
+        </div>
+        <div class="modal-field" id="modal-campo-material-tipo" style="display:none;">
+            <label for="modal-material-tipo">Tipo de material (obrigatório)</label>
+            <select id="modal-material-tipo"></select>
+        </div>
+        <div class="modal-field" id="modal-campo-material-qualidade" style="display:none;">
+            <label for="modal-material-qualidade">Qualidade do material</label>
+            <select id="modal-material-qualidade"></select>
+        </div>
+        <div class="modal-field" id="modal-campo-material-quantidade" style="display:none;">
+            <label for="modal-material-quantidade">Quantidade em estoque (unidades)</label>
+            <input type="number" id="modal-material-quantidade" min="0" step="1" value="1">
+        </div>
+        <div class="modal-field" id="modal-campo-peso" style="display:none;">
+            <label for="modal-peso" id="modal-label-peso">Peso (kg)</label>
+            <input type="number" id="modal-peso" min="0" step="0.1" value="0">
+        </div>
+        <div class="modal-field" id="modal-campo-volume" style="display:none;">
+            <label for="modal-volume" id="modal-label-volume">Volume</label>
+            <input type="number" id="modal-volume" min="0" step="0.1" value="0">
+            <p class="hint">Quanto espaço o item ocupa dentro de um recipiente (mochila, bolsa...).</p>
+        </div>
+        <div class="modal-field" id="modal-campo-tamanho" style="display:none;">
+            <label for="modal-tamanho">Tamanho</label>
+            <select id="modal-tamanho"></select>
+        </div>
+        <div class="modal-field" id="modal-campo-quantidade" style="display:none;">
+            <label for="modal-quantidade">Quantidade</label>
+            <input type="number" id="modal-quantidade" min="1" step="1" value="1">
+            <p class="hint" id="modal-quantidade-peso-total">Peso total: 0 kg</p>
+            <p class="hint" id="modal-quantidade-volume-total">Volume total: 0</p>
+        </div>
+        <div class="modal-field" id="modal-campo-categoria-item" style="display:none;">
+            <label for="modal-categoria-item">Categoria do inventário</label>
+            <select id="modal-categoria-item"></select>
+        </div>
+        <div class="modal-field" id="modal-campo-categoria-banco" style="display:none;">
+            <label for="modal-categoria-banco">Categoria (opcional)</label>
+            <input type="text" id="modal-categoria-banco" list="modal-categoria-banco-datalist" placeholder="Ex.: Capangas, Armas de fogo...">
+            <datalist id="modal-categoria-banco-datalist"></datalist>
+            <p class="hint">Usada pra filtrar a Biblioteca de Itens depois. Digite uma categoria já existente ou crie uma nova.</p>
+        </div>
+        <div class="modal-field" id="modal-campo-ja-equipar" style="display:none;">
+            <label class="checkbox-inline">
+                <input type="checkbox" id="modal-ja-equipar">
+                Já entra equipado (na mão / vestido / carregado)
+            </label>
+            <p class="hint">Pula o passo de mover pra "Levando consigo" e equipar depois — o item já nasce nessa categoria e equipado, pronto pra usar.</p>
+        </div>
+        <div class="modal-field" id="modal-campo-guardar-dentro" style="display:none;">
+            <label for="modal-guardar-dentro">Guardar dentro de</label>
+            <select id="modal-guardar-dentro"></select>
+            <p class="hint">Escolha um item com a tag "Recipiente" (ex.: uma mochila) pra guardar este item dentro dele. Só aparecem recipientes da mesma categoria acima (Levando consigo / Em casa).</p>
+        </div>
+
+        <!-- Configuração de arma -->
+        <div id="modal-config-arma" style="display:none;">
+            <div class="section-header">Configuração da arma</div>
+            <div class="modal-field">
+                <label for="modal-arma-dano-base">Dano base (número — usado no cálculo automático)</label>
+                <input type="number" id="modal-arma-dano-base" min="0" step="1" value="0">
+            </div>
+            <div class="modal-field">
+                <label for="modal-arma-tipo-dano">Tipo de dano</label>
+                <select id="modal-arma-tipo-dano"></select>
+            </div>
+            <div class="modal-field" id="modal-campo-tipo-dano-extra" style="display:none;">
+                <label for="modal-arma-tipo-dano-extra">Tipo de dano extra (opcional — arma branca com dois fios/pontas, ex.: machadinha que corta e perfura)</label>
+                <select id="modal-arma-tipo-dano-extra"></select>
+                <span class="hint-inline">Se escolher um tipo aqui, o jogador poderá optar entre o dano padrão e este na hora de atacar (mesmo valor de dano, só muda o tipo).</span>
+            </div>
+            <div class="modal-field" id="modal-campo-escala" style="display:none;">
+                <label for="modal-arma-escala">Escala (corpo a corpo)</label>
+                <select id="modal-arma-escala"></select>
+            </div>
+
+            <!-- Dilaceração (item 7 do plano de saúde/complicações):
+                 checkbox sempre MANUAL — nunca derivada automaticamente
+                 do calibre, só nasce PRÉ-marcada quando o calibre
+                 escolhido for Classe V (.338 Lapua/.50 BMG), continua
+                 editável depois. "Dilacera em golpe normal" só
+                 aparece/importa em arma branca. -->
+            <div class="modal-field" id="modal-campo-dilacera" style="display:none;">
+                <label><input type="checkbox" id="modal-arma-dilacera"> Dilacera <span class="hint-inline">acerto crítico com essa arma pode causar Sangramento Profundo (dano ≥ 1/3 do PV total do alvo) — vale pra arma de fogo e arma branca</span></label>
+            </div>
+            <div class="modal-field" id="modal-campo-dilacera-golpe-normal" style="display:none;">
+                <label><input type="checkbox" id="modal-arma-dilacera-golpe-normal"> Dilacera em golpe normal <span class="hint-inline">(só arma branca) dilacera em qualquer acerto, não só crítico</span></label>
+            </div>
+
+            <!-- Carga química em arma branca (dardo/lâmina envenenada —
+                 Parte 6.2 do plano de automação dos materiais químicos).
+                 Só aparece pra arma branca (não-fogo). Marcando, reaproveita
+                 o MESMO bloco "Configuração do produto químico" logo abaixo
+                 (raio/receita/dificuldade/tipo de efeito) pra montar
+                 it.quimico.efeitos — disparado automaticamente no alvo ao
+                 acertar (ver resolverAtaque em ficha.js), sem precisar de
+                 nenhum botão separado. -->
+            <div class="modal-field" id="modal-campo-carga-quimica" style="display:none;">
+                <label><input type="checkbox" id="modal-arma-carga-quimica"> ☣️ Carga química (dardo/lâmina envenenada) <span class="hint-inline">ao acertar, aplica automaticamente os efeitos da receita química configurada abaixo no alvo</span></label>
+            </div>
+
+            <!-- Só aparece pra tag Explosivo — manual pg. 81-82. "Modelo
+                 padrão" é só um atalho de preenchimento (autopreenche
+                 dano/dificuldades/nível ao escolher); dá pra editar tudo
+                 depois, inclusive deixando em "Personalizado". -->
+            <div id="modal-config-explosivo" style="display:none;">
+                <div class="section-header">Configuração do explosivo <span class="hint-inline">manual pg. 81-82</span></div>
+                <div class="modal-field">
+                    <label for="modal-explosivo-modelo">Modelo padrão (preenche os campos abaixo automaticamente)</label>
+                    <select id="modal-explosivo-modelo">
+                        <option value="">Personalizado</option>
+                    </select>
+                </div>
+                <div class="modal-field">
+                    <label for="modal-explosivo-dificuldade-armar">Dificuldade de armar (Explosivos — testada toda vez que a bomba é usada/armada, separada da dificuldade de criar)</label>
+                    <input type="number" id="modal-explosivo-dificuldade-armar" min="0" step="1" value="0">
+                </div>
+                <div class="modal-field">
+                    <label for="modal-explosivo-raio">Raio (metros — só referência pro Mestre aplicar o dano em área manualmente)</label>
+                    <input type="number" id="modal-explosivo-raio" min="0" step="1" value="0">
+                </div>
+                <div class="modal-field">
+                    <label for="modal-explosivo-modulo">Módulo de detonação acoplado (manual pg. 81 — acoplado na criação, sem teste pra juntar; é ele que "ativa" quando o explosivo é usado/armado)</label>
+                    <select id="modal-explosivo-modulo">
+                        <option value="">Nenhum / a definir</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Só aparece pra tag Biomecânica/Prótese — manual pg. 84-88
+                 (ver plano-implantes-biomecanica.txt). Dificuldade de
+                 instalar é SEPARADA da dificuldade de criar (esta última
+                 é o campo genérico de nível/receita que toda tag com
+                 nível já usa) — só entra em jogo na cirurgia, não na
+                 fabricação. Funções especiais é texto livre (zoom,
+                 compartimento, suporte de arma etc.) — descritivo, sem
+                 gatilho automático, resolvido pela mesa. -->
+            <div id="modal-config-implante" style="display:none;">
+                <div class="section-header">Configuração do implante <span class="hint-inline">manual pg. 84-88</span></div>
+                <div class="modal-field">
+                    <label for="modal-implante-subtipo">Subtipo</label>
+                    <select id="modal-implante-subtipo">
+                        <option value="">Escolha…</option>
+                    </select>
+                </div>
+                <!-- Só aparece pra subtipo "Membro superior/inferior" (braço/
+                     perna) ou "Extremidade periférica" (mão/pé) — os únicos
+                     dois com lado esquerdo/direito de verdade no corpo. Usa
+                     as MESMAS 8 chaves de Golpes Mirados (LOCAIS_MIRA,
+                     dados-manual.js) — braco_esquerdo/direito,
+                     perna_esquerda/direita, mao_esquerda/direita,
+                     pe_esquerda/direita — filtradas por localArmadura
+                     batendo com o subtipo escolhido (ver
+                     atualizarBlocoSubtipoImplante). É o que faz a aba Saúde
+                     conseguir mostrar ONDE a prótese com rejeição está. -->
+                <div class="modal-field" id="modal-implante-local-bloco" style="display:none;">
+                    <label for="modal-implante-local">Local implantado</label>
+                    <select id="modal-implante-local">
+                        <option value="">Escolha…</option>
+                    </select>
+                </div>
+                <div class="modal-field">
+                    <label for="modal-implante-dificuldade-instalar">Dificuldade de instalar (Biomecânica — testada na cirurgia, separada da dificuldade de criar)</label>
+                    <input type="number" id="modal-implante-dificuldade-instalar" min="0" step="1" value="0">
+                </div>
+                <div class="modal-field">
+                    <label for="modal-implante-funcoes-especiais">Funções especiais (texto livre — zoom, compartimento, suporte de arma etc.; sem automação, resolvido pela mesa)</label>
+                    <textarea id="modal-implante-funcoes-especiais" placeholder="Ex.: zoom digital 2x, compartimento interno de 1kg, suporte externo p/ arma nível 2..."></textarea>
+                </div>
+
+                <!-- Tomada e Chip (manual pg. 84) são os dois únicos
+                     subtipos com efeito 100% automático (os outros cinco
+                     ficam a critério da mesa — manual pg. 83). Bloco de
+                     Tomada é só um hint informativo (slots calculados a
+                     partir do Nível); bloco de Chip tem campos de verdade
+                     (Tomada de destino + alvo do bônus/especialização). -->
+                <p class="hint" id="modal-implante-tomada-info" style="display:none;"></p>
+
+                <div id="modal-implante-chip-bloco" style="display:none;">
+                    <div class="modal-field">
+                        <label for="modal-implante-chip-tomada">Tomada de destino (onde este chip será encaixado)</label>
+                        <select id="modal-implante-chip-tomada">
+                            <option value="">Nenhuma (fora do corpo — sem efeito)</option>
+                        </select>
+                    </div>
+                    <p class="hint" id="modal-implante-chip-efeito-hint"></p>
+                    <div class="modal-field" id="modal-implante-chip-bloco-modificador" style="display:none;">
+                        <label for="modal-implante-chip-alvo">Rolagem/perícia que recebe o modificador do chip</label>
+                        <select id="modal-implante-chip-alvo"></select>
+                    </div>
+                    <div class="modal-field" id="modal-implante-chip-bloco-especializacao" style="display:none;">
+                        <label for="modal-implante-chip-especializacao-pericia">Perícia que recebe a especialização do chip</label>
+                        <select id="modal-implante-chip-especializacao-pericia"></select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Só aparece pra tag Produto Químico (ver plano-quimicos-
+                 cenario.txt) — item pensado pra afetar OUTRA pessoa em área
+                 (gás sedativo, spray tóxico, aerossol psicotrópico etc.,
+                 manual pág. 91-93), não pra autoconsumo. "Modificadores
+                 automáticos" e "Descrição" (duração em horas) continuam
+                 sendo os mesmos campos de sempre, reinterpretados como
+                 "efeito em quem for exposto". -->
+            <div id="modal-config-quimico" style="display:none;">
+                <div class="section-header">Configuração do produto químico <span class="hint-inline">manual pg. 91-93</span></div>
+                <div class="modal-field">
+                    <label for="modal-quimico-raio">Raio (metros — só referência pro Mestre aplicar o efeito em área manualmente)</label>
+                    <input type="number" id="modal-quimico-raio" min="0" step="1" value="0">
+                </div>
+                <div class="modal-field">
+                    <label>Receita (pontos de material químico — manual pg. 92-93)</label>
+                    <span class="hint-inline">Pontos de cada material investidos nesta receita (0 = não entra). A dificuldade e o resumo abaixo são calculados sozinhos a partir disso, mas continuam editáveis.</span>
+                    <div id="modal-quimico-materiais-lista"></div>
+                </div>
+                <div class="modal-field">
+                    <label for="modal-quimico-dificuldade-usar">Dificuldade de uso (calculada a partir da receita acima — editável)</label>
+                    <input type="number" id="modal-quimico-dificuldade-usar" min="0" step="1" value="0">
+                </div>
+                <div class="modal-field">
+                    <label for="modal-quimico-tipo-efeito">Tipo de efeito (resumo gerado da receita acima — editável)</label>
+                    <input type="text" id="modal-quimico-tipo-efeito" placeholder="Ex: Sedativo 3 + Tóxico 1">
+                </div>
+            </div>
+
+            <!-- Só aparece quando a tag é Arma E a perícia vinculada é uma
+                 perícia de Arma de Fogo (pequeno/médio/grande porte). -->
+            <div id="modal-config-arma-fogo" style="display:none;">
+                <div class="section-header">Características de Arma de Fogo <span class="hint-inline">manual pg. 95-97</span></div>
+                <div class="modal-field">
+                    <label for="modal-arma-capacidade">Capacidade (tambor/câmara p/ armas sem carregador removível — ver "Usa carregador?" abaixo; pra arma com carregador, é só referência)</label>
+                    <input type="number" id="modal-arma-capacidade" min="0" step="1" value="0">
+                </div>
+                <div class="modal-field">
+                    <label for="modal-arma-disparos-turno">Disparos por turno</label>
+                    <input type="number" id="modal-arma-disparos-turno" min="1" step="1" value="1">
+                </div>
+                <div class="modal-field">
+                    <label for="modal-arma-precisao">Precisão (modificador no teste de ataque)</label>
+                    <input type="number" id="modal-arma-precisao" step="1" value="0">
+                </div>
+                <div class="modal-field">
+                    <label for="modal-arma-dificuldade-acerto">Dificuldade de acerto (base, ex: 14)</label>
+                    <input type="number" id="modal-arma-dificuldade-acerto" min="0" step="1" value="14">
+                </div>
+                <div class="modal-field">
+                    <label for="modal-arma-alcance">Alcance</label>
+                    <select id="modal-arma-alcance"></select>
+                </div>
+                <div class="modal-field">
+                    <label for="modal-arma-recuo">Recuo</label>
+                    <select id="modal-arma-recuo"></select>
+                </div>
+                <div class="modal-field">
+                    <label for="modal-arma-efeito-extra">Efeito extra</label>
+                    <input type="text" id="modal-arma-efeito-extra" placeholder="ex: Pode derrubar! Teste Massa Corpórea, dif 24.">
+                </div>
+                <div class="modal-field">
+                    <label class="checkbox-inline">
+                        <input type="checkbox" id="modal-arma-usa-carregador" checked>
+                        Usa carregador (magazine removível)?
+                    </label>
+                    <p class="hint">Desmarque pra armas que disparam direto do estoque de munição no inventário (ex.: revólver, escopeta 12 gauge) — sem "Recarregar"/"Retirar carregador"; cada disparo desconta 1 projétil direto de "Levando consigo".</p>
+                </div>
+                <div class="modal-field" id="modal-campo-arma-camara-extra" style="display:none;">
+                    <label class="checkbox-inline">
+                        <input type="checkbox" id="modal-arma-tem-camara-extra">
+                        Capacidade +1 (bala na agulha)?
+                    </label>
+                    <p class="hint">Permite carregar 1 projétil direto na câmara, além da munição do carregador. Esse round fica pronto pra disparar mesmo trocando de carregador, e só é gasto quando o carregador anexado esvaziar.</p>
+                </div>
+                <div class="modal-field" id="modal-campo-arma-carregador">
+                    <label for="modal-arma-carregador">Carregador anexado</label>
+                    <select id="modal-arma-carregador"></select>
+                    <p class="hint">Só aparecem aqui carregadores do mesmo calibre desta arma que estão no inventário.</p>
+                </div>
+            </div>
+
+            <div class="section-header">Modificações da arma</div>
+            <div id="modal-arma-modificacoes-lista"></div>
+            <button id="modal-arma-add-modificacao" class="btn-blue" type="button">+ Adicionar modificação</button>
+        </div>
+
+        <div class="modal-field" id="modal-campo-local-protegido" style="display:none;">
+            <label for="modal-local-protegido">Parte do corpo protegida (obrigatória)</label>
+            <select id="modal-local-protegido"></select>
+        </div>
+
+        <!-- Redução de dano (coletes/placas) -->
+        <div id="modal-config-reducao-dano" style="display:none;">
+            <div class="section-header">Tipos de dano reduzidos</div>
+            <p class="hint">Marque cada tipo de dano que este item reduz, e informe o valor da redução pra cada um.</p>
+            <div id="modal-reducao-dano-lista" class="reducao-dano-grid"></div>
+        </div>
+
+        <!-- Veículos: tipo (periodicidade da manutenção) + os 5 atributos
+             com escala fixa (ver prepararModalVeiculo em ficha.js, que
+             popula as opções de cada select a partir de ESCALAS_VEICULO
+             em dados-manual.js). -->
+        <div class="modal-field" id="modal-campo-tipo-veiculo" style="display:none;">
+            <label for="modal-tipo-veiculo">Tipo (periodicidade da manutenção)</label>
+            <select id="modal-tipo-veiculo"></select>
+        </div>
+        <div id="modal-config-veiculo" style="display:none;">
+            <div class="section-header">Atributos (0-5)</div>
+            <p class="hint">Direto da escala do manual (pág. 36-43) — o efeito de cada nível aparece no card da ficha depois de salvar.</p>
+            <div class="grid-atributos" id="modal-veiculo-atributos"></div>
+        </div>
+
+        <!-- Efeitos de Equipamento Médico (tag "equipamento_medico" —
+             ver plano-efeitos-equipamentos-medicos.txt, Fase 3). Cada
+             linha escolhe um tipo do CATALOGO_EFEITOS_MEDICOS (dados-
+             manual.js) e preenche os parâmetros daquele tipo — mesmo
+             padrão dinâmico de "Modificadores automáticos" abaixo, só
+             que os campos de cada linha mudam conforme o tipo
+             escolhido (ver renderizarCamposEfeitoMedico, ficha.js). -->
+        <div id="modal-campo-efeitos-medicos" style="display:none;">
+            <div class="section-header">Efeitos do equipamento médico</div>
+            <p class="hint">Escolha 1+ efeitos do catálogo abaixo pra descrever o que este item faz quando usado num tratamento, num Teste de Infecção, ou usado direto (restaurar PV, estabilizar condição crítica...). Item sem nenhum efeito cadastrado continua funcionando "pelado" (só nome/preço/peso/descrição) — cobre insumos como Gaze ou Bisturi, que não têm efeito mecânico próprio.</p>
+            <div id="modal-lista-efeitos-medicos"></div>
+            <button id="modal-add-efeito-medico" class="btn-blue" type="button">+ Adicionar efeito</button>
+        </div>
+
+        <!-- Descrição livre + modificadores estruturados: usados por
+             quase todas as listas (perícias, itens, vantagens...), mas
+             não fazem parte do modelo de dados de Veículo (ver
+             plano-veiculos.txt) — escondidos pra esse caso, ver
+             prepararModalVeiculo/esconderTodosCamposEspeciais. -->
+        <div id="modal-secao-narrativa">
+            <div class="modal-field">
+                <label for="modal-descricao">Descrição / efeito narrativo</label>
+                <textarea id="modal-descricao" placeholder="Texto livre, regra especial, anotação de mesa..."></textarea>
+            </div>
+
+            <div class="section-header">Modificadores automáticos</div>
+            <div class="hint">Cada modificador soma (ou subtrai, com valor negativo) direto no cálculo do alvo escolhido.</div>
+            <div id="modal-lista-modificadores"></div>
+            <button id="modal-add-modificador" class="btn-blue" type="button">+ Adicionar modificador</button>
+        </div>
+
+        <div class="modal-btns">
+            <button id="modal-cancelar" class="btn-ghost" type="button">Cancelar</button>
+            <button id="modal-excluir" class="btn-red" type="button">Excluir</button>
+            <button id="modal-salvar" class="btn-lime" type="button">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- O Painel do Mestre antes vivia aqui, num painel lateral direito à
+     parte, só visível depois de clicar em um botão. Agora ele mora
+     embutido dentro da gaveta de Ações Pendentes (#drawer-pendentes,
+     seção .drawer-pendentes-secao-mestre), então já aparece pronto assim
+     que a gaveta abre. -->
+
+<!-- ===================== GERENCIADOR DE COMBATE (painel lateral direito) ===================== -->
+<!-- Não é mais um modal de tela cheia: fica encostado na borda direita e
+     desliza pra dentro/fora, deixando a ficha visível (e usável) do lado
+     esquerdo ao mesmo tempo. -->
+<aside class="drawer-combate" id="modal-combate-mestre">
+    <div class="drawer-combate-topo">
+        <h4>Gerenciador de Combate</h4>
+        <button id="combate-mestre-fechar" class="btn-ghost" type="button"><i data-lucide="x"></i> Fechar</button>
+    </div>
+    <div id="combate-mestre-corpo" class="drawer-combate-corpo"></div>
+</aside>
+
+<!-- ===================== GERENCIADOR DE CENÁRIO (painel lateral direito) ===================== -->
+<!-- Mesmo molde do Gerenciador de Combate acima: drawer encostado na
+     borda direita, ficha continua visível/usável do lado esquerdo. -->
+<aside class="drawer-combate" id="modal-cenario-mestre">
+    <div class="drawer-combate-topo">
+        <h4>Gerenciador de Cenário</h4>
+        <button id="cenario-mestre-fechar" class="btn-ghost" type="button"><i data-lucide="x"></i> Fechar</button>
+    </div>
+    <div id="cenario-mestre-corpo" class="drawer-combate-corpo"></div>
+</aside>
+
+<!-- ===================== MODAL: AVISO CUSTO DE VIDA ===================== -->
+<div class="modal-overlay" id="modal-custo-vida">
+    <div class="modal-content">
+        <h4>Pagar gasto semanal</h4>
+        <p id="custo-vida-resumo" class="hint"></p>
+        <div class="modal-field">
+            <label for="custo-vida-origem">Pagar com</label>
+            <select id="custo-vida-origem"></select>
+        </div>
+        <div class="modal-btns">
+            <button id="custo-vida-confirmar" class="btn-lime" type="button">Confirmar pagamento</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL: TIMESKIP (Mestre) ===================== -->
+<div class="modal-overlay" id="modal-timeskip">
+    <div class="modal-content">
+        <h4>Timeskip</h4>
+        <p class="hint">Avança vários dias de uma vez. Cada Domingo dentro do período dispara um pagamento semanal na ficha dos jogadores — se houver mais de um Domingo, os pagamentos aparecem um de cada vez, na sequência.</p>
+        <div class="modal-field">
+            <label for="timeskip-dias">Quantos dias vão se passar?</label>
+            <input type="number" id="timeskip-dias" min="1" step="1" value="1">
+        </div>
+        <p id="timeskip-preview" class="hint"></p>
+        <div class="modal-btns">
+            <button id="timeskip-cancelar" class="btn-ghost" type="button">Cancelar</button>
+            <button id="timeskip-confirmar" class="btn-lime" type="button">Confirmar timeskip</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL: POPUP DE TREINAMENTO (Mestre) ===================== -->
+<div class="modal-overlay" id="modal-popup-treino">
+    <div class="modal-content">
+        <h4>Avançar treinamento</h4>
+        <p id="popup-treino-texto" class="hint"></p>
+        <div class="modal-btns">
+            <button id="popup-treino-nao" class="btn-ghost" type="button">Agora não</button>
+            <button id="popup-treino-sim" class="btn-lime" type="button">Pode subir</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL: AVISO DE TORNIQUETE (Mestre) ===================== -->
+<!-- Fase 8 do plano de efeitos de equipamentos médicos: só um lembrete,
+     sem aplicar dano sozinho — por isso um único botão de "ok, descartar",
+     sem escolha sim/não como o popup de treinamento acima. -->
+<div class="modal-overlay" id="modal-aviso-torniquete">
+    <div class="modal-content">
+        <h4>⚠ Torniquete ativo há mais de 1h de jogo</h4>
+        <p id="aviso-torniquete-texto" class="hint"></p>
+        <div class="modal-btns">
+            <button id="aviso-torniquete-ok" class="btn-lime" type="button">Ok, entendi</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL: DAR ITEM (transferência entre jogadores) ===================== -->
+<div class="modal-overlay" id="modal-dar-item">
+    <div class="modal-content">
+        <h4 id="dar-item-titulo">Dar item</h4>
+        <p class="hint">O item só passa pra outra ficha depois que o Mestre aprovar o pedido.</p>
+        <div class="modal-field">
+            <label for="dar-item-select">Dar para</label>
+            <select id="dar-item-select"></select>
+        </div>
+        <div class="modal-btns">
+            <button id="dar-item-cancelar" class="btn-ghost" type="button">Cancelar</button>
+            <button id="dar-item-confirmar" class="btn-lime" type="button">Solicitar transferência</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL: SELECIONAR ALVO (ataque em combate ativo) ===================== -->
+<div class="modal-overlay" id="modal-selecionar-alvo">
+    <div class="modal-content">
+        <h4 id="alvo-titulo">Atacar com item</h4>
+        <p class="hint">Combate ativo no Gerenciador do Mestre — escolha o alvo pra resolver o ataque automaticamente.</p>
+        <div class="modal-field">
+            <label for="alvo-select">Alvo</label>
+            <select id="alvo-select"></select>
+        </div>
+        <div class="modal-field" id="alvo-campo-extra" style="display:none;"></div>
+        <div class="modal-btns">
+            <button id="alvo-cancelar" class="btn-ghost" type="button">Cancelar</button>
+            <button id="alvo-confirmar" class="btn-red" type="button">Atacar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reação a um golpe recebido (Esquiva/Bloqueio) — só aparece pra quem
+     recebeu o golpe (ou pro Mestre, se o alvo for NPC). Inadiável, sem
+     botão de fechar por fora: precisa escolher uma opção. -->
+<div class="modal-overlay" id="modal-reacao-defesa">
+    <div class="modal-content">
+        <h4>Você foi atingido!</h4>
+        <div id="reacao-defesa-corpo"></div>
+        <div class="modal-btns" id="reacao-defesa-botoes"></div>
+    </div>
+</div>
+
+<!-- Template de uma linha de modificador (clonado via JS) -->
+<template id="template-modificador">
+    <div class="modificador-row">
+        <select class="mod-alvo"></select>
+        <input type="number" class="mod-valor" placeholder="+/-" value="0">
+        <label class="checkbox-inline mod-ocasional-label" title="Em vez de valer sempre, esse modificador vira um checkbox — na própria perícia (se o alvo for uma perícia) ou na tela do teste específico (ex: Testar Infecção) — que só entra na conta quando marcado, pra situações especiais descritas na especialização/vantagem/item.">
+            <input type="checkbox" class="mod-ocasional"> Ocasião especial
+        </label>
+        <button class="mod-remover btn-red" type="button" title="Remover">×</button>
+    </div>
+</template>
+
+<!-- Template de uma linha de compartimento de recipiente (clonado via JS —
+     ver seção 5.1 do projeto-slots-porte.txt). Nome livre, capacidade em
+     volume e maior tamanho aceito — cada compartimento é independente. -->
+<template id="template-compartimento">
+    <div class="compartimento-row">
+        <input type="text" class="compartimento-nome" placeholder="Nome (ex: Bolso frente esq.)">
+        <input type="number" class="compartimento-capacidade" min="0" step="0.1" placeholder="Capacidade" value="0">
+        <select class="compartimento-tamanho"></select>
+        <button class="compartimento-remover btn-red" type="button" title="Remover">×</button>
+    </div>
+</template>
+
+<!-- Template de uma linha de modificação de arma (texto livre, sugestões) -->
+<template id="template-modificacao-arma">
+    <div class="modificacao-arma-row">
+        <input type="text" class="modarma-texto" placeholder="ex: Aumento de dano">
+        <button class="modarma-remover btn-red" type="button" title="Remover">×</button>
+    </div>
+</template>
+
+<!-- Template de uma linha de efeito de equipamento médico (clonado via
+     JS — ver plano-efeitos-equipamentos-medicos.txt, Fase 3). Os campos
+     dentro de .efmed-campos são desenhados dinamicamente conforme o
+     tipo escolhido no select (ver renderizarCamposEfeitoMedico,
+     ficha.js) — cada tipo do catálogo pede parâmetros diferentes. -->
+<template id="template-efeito-medico">
+    <div class="efeito-medico-row">
+        <div class="efeito-medico-row-topo">
+            <select class="efmed-tipo"></select>
+            <button class="efmed-remover btn-red" type="button" title="Remover">×</button>
+        </div>
+        <p class="hint efmed-descricao"></p>
+        <div class="efmed-campos"></div>
+    </div>
+</template>
+
+<!-- Template de uma linha do sub-editor "modificadores" dentro do
+     efeito "Modificador temporário" (campo lista_modificadores) — igual
+     a .modificador-row, só sem o checkbox "Ocasião especial" (não faz
+     sentido pra um efeito que já é temporário/condicionado ao uso do
+     item). -->
+<template id="template-efmed-modificador">
+    <div class="efmed-mod-row">
+        <select class="efmed-mod-alvo"></select>
+        <input type="number" class="efmed-mod-valor" placeholder="+/-" value="0">
+        <button class="efmed-mod-remover btn-red" type="button" title="Remover">×</button>
+    </div>
+</template>
+
+<!-- Overlay de Morte — fica escondido (display:none) até o PV ou a
+     Energia chegarem a 0 (ver calcularEstadoSaude/calcularEstadoEnergia
+     em regras.js e verificarMorte() em ficha.js). Cobre a tela inteira
+     de propósito: enquanto está visível, ninguém (exceto o Mestre em
+     Godmode) consegue interagir com o resto da ficha por baixo dele. -->
+<div id="overlay-morte" class="overlay-morte" style="display:none;">
+    <div class="overlay-morte-conteudo">
+        <h1 id="overlay-morte-titulo">VOCÊ MORREU!</h1>
+        <p id="overlay-morte-texto"></p>
+        <button type="button" id="btn-nao-quero-morrer" class="btn-red overlay-morte-botao">AAAAA NÃO QUERO MORRER</button>
+        <div id="overlay-morte-resultado" class="overlay-morte-resultado"></div>
+    </div>
+</div>
+
+<!-- Botão pequeno, canto da tela, não bloqueia nada — só aparece pro
+     Mestre com Godmode ativo quando a ficha aberta está morta (Godmode
+     ignora o overlay cheio de propósito, ver verificarMorte() em
+     ficha.js, então essa é a única forma de "destravar" a ficha sem
+     mexer direto no Firebase). -->
+<button type="button" id="btn-reviver-godmode" class="btn-red godmode-revive-btn" style="display:none;" title="Zera mortoDeVez e devolve 1 PV/Energia">💀 Reviver (Godmode)</button>
+
+<!-- Easter egg: botão invisível no canto inferior esquerdo. Ao clicar,
+     mostra um overlay de tela cheia sem nenhum botão de fechar — só dá
+     pra sair atualizando a página (ver #btn-easter-egg em ficha.js). -->
+<button type="button" id="btn-easter-egg" class="easter-egg-btn" aria-hidden="true" tabindex="-1"></button>
+<div class="overlay-easter-egg" id="overlay-easter-egg" style="display:none;">
+    <h1>haha frkstnmsk</h1>
+</div>
+
+<div id="toast"></div>
+
+<!-- Ícones (Lucide) — biblioteca gratuita carregada direto da CDN, sem
+     precisar baixar nenhum arquivo de ícone. Os elementos com
+     data-lucide="nome-do-icone" viram SVG automaticamente quando
+     lucide.createIcons() roda (ver atualizarIcones() em ficha.js). -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<script type="module" src="ficha.js?v=20260830-npcnivelpv"></script>
+</body>
+</html>

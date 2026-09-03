@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>DISTRITO NORTE | Chuva de Neon</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        /* CONFIGURAÇÕES GERAIS - Estética Chuva de Neon */
+        :root {
+            --bg-dark: #000000;
+            --panel-bg: rgba(13, 13, 15, 0.95);
+            --neon-purple: #8b5cf6;
+            --neon-lime: #a3e635;
+            --neon-red: #ef4444;
+            --neon-blue: #0ea5e9;
+            --text-main: #f0ecd8;
+            --text-dim: #94a3b8;
+            --border-style: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            display: flex; 
+            background-color: var(--bg-dark);
+            background-image: url("https://imgur.com/pBTrEcE.jpeg"); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: 'Inter', sans-serif; 
+            padding: 20px; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+            color: var(--text-main);
+            position: relative;
+        }
+
+        /* CONTAINER PRINCIPAL TRIPLICADO (3 COLUNAS) */
+        .main-container { 
+            display: flex; 
+            gap: 18px; 
+            max-width: 1650px; 
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* BARRAS LATERAIS (ESQUERDA E DIREITA) */
+        .side-panel { 
+            background: var(--panel-bg);
+            border: var(--border-style);
+            padding: 27px; 
+            width: 290px; 
+            display: flex;
+            flex-direction: column;
+            max-height: 775px; 
+            border-radius: 4px;
+        }
+
+        .side-panel h3 { 
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.15rem; 
+            text-transform: uppercase;
+            color: white;
+            border-bottom: 2px solid var(--neon-purple);
+            padding-bottom: 9px;
+            margin-bottom: 14px;
+        }
+
+        /* CENTRO: MAPA E HUDs */
+        .map-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 11px; 
+            flex: 1;
+            min-width: 55vw;
+        }
+
+        #map { 
+            width: 100%; 
+            height: 618px; 
+            border-radius: 4px;
+            background: #050505; 
+            cursor: crosshair; 
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            border: var(--border-style);
+        }
+
+        /* PAINÉIS DE INFORMAÇÃO */
+        .info-panel { 
+            background: var(--panel-bg); 
+            backdrop-filter: blur(8px);
+            border: var(--border-style);
+            border-left: 3.5px solid var(--neon-purple); 
+            padding: 11px 18px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            gap: 14px;
+        }
+
+        .hud-label {
+            font-family: 'Space Grotesk', sans-serif;
+            text-transform: uppercase;
+            font-size: 0.65rem; 
+            letter-spacing: 1.8px;
+            color: var(--neon-purple);
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .coord-box { 
+            background: #000; 
+            padding: 5px 14px; 
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 0.8rem; 
+            color: var(--neon-lime);
+            border: 1px solid rgba(163, 230, 53, 0.15);
+        }
+
+        .travel-mode { 
+            display: flex; 
+            gap: 12px; 
+            font-family: 'Space Grotesk', sans-serif;
+            flex-wrap: wrap;
+        }
+
+        .travel-mode label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .travel-mode input { accent-color: var(--neon-lime); cursor: pointer; }
+
+        /* BOTÕES */
+        button { 
+            background: transparent;
+            border: 1px solid var(--neon-purple);
+            padding: 7px 16px; 
+            color: white; 
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.75rem; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+            border-radius: 2px;
+        }
+
+        button:hover { 
+            background: var(--neon-purple);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+        }
+
+        #limparPontosBtn { border-color: var(--neon-red); color: var(--neon-red); }
+        #limparPontosBtn:hover { background: var(--neon-red); color: white; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+
+        .section-header {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.65rem; 
+            text-transform: uppercase;
+            letter-spacing: 1.8px;
+            color: var(--text-dim);
+            margin: 11px 0 7px 0;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .section-header::after { content: ""; height: 1px; background: rgba(255,255,255,0.08); flex: 1; }
+
+        /* FILTROS E BUSCA */
+        #filtrosCategorias {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 9px 12px;
+            margin-bottom: 14px;
+            max-height: 260px; 
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        #filtrosCategorias label {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 4px 0;
+            font-size: 0.75rem; 
+            color: #cbd5e1;
+            text-transform: lowercase;
+            cursor: pointer;
+        }
+        #filtrosCategorias input { accent-color: var(--neon-lime); cursor: pointer; }
+
+        .search-box-wrapper {
+            margin-bottom: 10px;
+        }
+        .search-box-wrapper input {
+            width: 100%;
+            background: #000;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 9px 12px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            border-radius: 2px;
+        }
+        .search-box-wrapper input:focus {
+            outline: none;
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 8px rgba(139, 92, 246, 0.3);
+        }
+
+        /* LISTA DE REGISTROS */
+        .poi-list { flex: 1; overflow-y: auto; list-style: none; padding-right: 4px; }
+        .poi-list li { 
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 5px;
+            padding: 7px 11px;
+            border-left: 2.5px solid var(--neon-purple); 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .poi-list li strong {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.75rem; 
+            max-width: 120px; 
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .poi-actions { display: flex; gap: 5px; }
+        .poi-actions button { padding: 4px 7px; font-size: 0.7rem; box-shadow: none; border-radius: 2px; }
+        .btn-editar { border-color: var(--neon-blue); color: var(--neon-blue); }
+        .btn-editar:hover { background: var(--neon-blue); color: white; border-color: var(--neon-blue); }
+        .btn-remover { border-color: var(--neon-red); color: var(--neon-red); }
+        .btn-remover:hover { background: var(--neon-red); color: white; border-color: var(--neon-red); }
+
+        .hint { 
+            font-size: 0.65rem; 
+            background: rgba(163, 230, 53, 0.03);
+            border: 1px dashed rgba(163, 230, 53, 0.3);
+            padding: 9px;
+            color: var(--neon-lime);
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+        
+        .poi-share { display: flex; flex-direction: column; gap: 5px; margin-top: auto; }
+        .poi-share button { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
+        .poi-share button:hover { background: rgba(255,255,255,0.15); }
+
+        /* LEAFLET POPUP & TOOLTIP */
+        .leaflet-popup-content-wrapper { background: #0a0a0c !important; color: var(--text-main) !important; border: 1px solid var(--neon-purple); border-radius: 4px; font-size: 0.8rem; padding: 6px; }
+        .leaflet-popup-tip { background: #0a0a0c !important; }
+        
+        /* Estilos customizados dentro do Popup do POI */
+        .popup-poi-container { display: flex; flex-direction: column; gap: 5px; min-width: 150px; }
+        .popup-btn-group { display: flex; gap: 6px; margin-top: 6px; }
+        .popup-btn-group button { padding: 5px 8px; font-size: 0.7rem; flex: 1; text-align: center; }
+
+        .leaflet-tooltip-nordeste {
+            background: #050505 !important;
+            border: 1px solid var(--neon-purple) !important;
+            color: #ffffff !important;
+            font-family: 'Space Grotesk', sans-serif !important;
+            font-weight: bold !important;
+            font-size: 0.75rem !important;
+            padding: 4px 8px !important;
+            border-radius: 2px !important;
+            box-shadow: 0 0 8px rgba(0,0,0,0.8);
+        }
+
+        /* MODAL DE CRIAÇÃO STABLE EXPANDED */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+        .modal-overlay.active { visibility: visible; opacity: 1; }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-purple);
+            box-shadow: 0 0 35px rgba(139, 92, 246, 0.3);
+            padding: 38px 32px;
+            width: 450px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+        .modal-content h4 {
+            font-family: 'Space Grotesk', sans-serif;
+            text-transform: uppercase;
+            color: #fff;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+            font-size: 1.15rem;
+            letter-spacing: 1px;
+        }
+        .modal-field { display: flex; flex-direction: column; gap: 8px; }
+        .modal-field label { font-family: 'Space Grotesk', sans-serif; font-size: 0.7rem; text-transform: uppercase; color: var(--neon-purple); letter-spacing: 1px; }
+        
+        .modal-content input[type="text"], .modal-content select {
+            width: 100%;
+            background: #000;
+            border: var(--border-style);
+            padding: 11px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            border-radius: 2px;
+        }
+        .modal-content input[type="text"]:focus, .modal-content select:focus { outline: none; border-color: var(--neon-purple); }
+        
+        /* Ajuste do grid de coordenadas no modal (largura pela metade e centralizado) */
+        .modal-grid-coords {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 50%;
+            align-self: center;
+        }
+
+        .modal-grid-cats { 
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px;
+            max-height: 160px;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.05);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 12px;
+        }
+        .modal-grid-cats label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            cursor: pointer;
+            text-transform: lowercase;
+        }
+        .modal-grid-cats input { accent-color: var(--neon-lime); cursor: pointer; }
+
+        .modal-btns { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+        .modal-btns button { flex: 1; padding: 12px; font-size: 0.8rem; min-width: 100px; }
+
+        /* HUD FLUTUANTE DE DESENHO */
+        .drawing-hud {
+            display: none;
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-lime);
+            padding: 10px 15px;
+            border-radius: 4px;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 0 20px rgba(163, 230, 53, 0.2);
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--neon-purple); border-radius: 2px; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    
+    <div class="side-panel">
+        <h3>Category c palmitcy</h3>
+        <div class="hint" style="margin-bottom: 8px;">Mapa da mesa: <b id="mesaAtualLabel">—</b></div>
+        
+        <div class="section-header">linhas</div>
+        <button id="btnModoDesenhoLinha" style="border-color: var(--neon-blue); color: var(--neon-blue); margin-bottom: 5px; width: 100%;"> Desenhar Nova Linha</button>
+        <button id="btnLimparTodasLinhas" style="border-color: var(--neon-red); color: var(--neon-red); width: 100%; font-size: 0.65rem; padding: 4px 10px;">Limpar Linhas Criadas</button>
+
+        <div class="section-header">filtros</div>
+        <div id="filtrosCategorias"></div>
+        
+        <div class="section-header">Instruções</div>
+        <div class="hint">
+            [SHIFT + CLIQUE ESQUERDO]<br>-> Inserir novo registro<br><br>
+            [CLIQUE ESQUERDO]<br>-> Marcar telemetria A/B
+        </div>
+    </div>
+
+    <div class="map-wrapper">
+        <div id="map"></div>
+        
+        <div class="info-panel" id="painelDefaultInfo">
+            <div>
+                <span class="hud-label">Coordenadas</span>
+                <div class="coord-box">📍 <span id="mouseCoord">-- , --</span></div>
+            </div>
+            <div>
+                <span class="hud-label">vai como?</span>
+                <div class="travel-mode">
+                    <label><input type="radio" name="modo" value="pe" checked> 🚶 A pé</label>
+                    <label><input type="radio" name="modo" value="transporte"> 🚌 Ônibus/Metrô</label>
+                    <label><input type="radio" name="modo" value="carro"> 🚗 Carro</label>
+                    <label><input type="radio" name="modo" value="uber"> 📱 Uber</label>
+                </div>
+            </div>
+            <button id="limparPontosBtn">Resetar Trajeto</button>
+        </div>
+
+        <div class="info-panel drawing-hud" id="painelDesenhoInfo">
+            <div>
+                <span class="hud-label" style="color: var(--neon-lime);">Modo Construtor de Fronteiras</span>
+                <div style="font-size: 0.85rem;" id="txtStatusDesenho">Clique no mapa para traçar os pontos da linha...</div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button id="btnCancelarDesenho" style="border-color: var(--neon-red); color: var(--neon-red);">Abortar</button>
+                <button id="btnSalvarDesenho" style="border-color: var(--neon-lime); color: var(--neon-lime);">Salvar Linha</button>
+            </div>
+        </div>
+
+        <div class="info-panel" style="border-left-color: var(--neon-lime);">
+            <div>
+                <span class="hud-label" style="color: var(--neon-lime);">Distância percorrida</span>
+                <strong id="distanciaVal" style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem;">---</strong>
+            </div>
+            <div>
+                <span class="hud-label" style="color: var(--neon-lime);">Tempo de Viagem / Custo de Viagem</span>
+                <strong id="tempoVal" style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem;">---</strong>
+            </div>
+        </div>
+    </div>
+    
+    <div class="side-panel">
+        <h3>Localidades</h3>
+        
+        <div class="section-header">Locais</div>
+        <div class="search-box-wrapper">
+            <input type="text" id="buscaPoiInput" placeholder="🔍 pra onde chefe?">
+        </div>
+        <ul class="poi-list" id="poiList"><li>Nenhum registo local</li></ul>
+
+        <div class="poi-share">
+            <div class="section-header">Arquivos</div>
+            <button id="exportarPoisBtn">Backup de Dados (JSON)</button>
+            <button id="importarPoisBtn" style="border-color: var(--text-dim); color: var(--text-dim);">Restaurar Backup</button>
+            <input type="file" id="arquivoImportacao" accept=".json" style="display:none;">
+            <button id="btnSalvarBackupNuvem" style="border-color: var(--neon-blue); color: var(--neon-blue);">☁️ Salvar Mapa (Backup Nuvem)</button>
+            <button id="btnRecarregarSeed" style="border-color: var(--neon-lime); color: var(--neon-lime);">Recarregar Último Backup</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="poiModal">
+    <div class="modal-content">
+        <h4 id="modalTitulo">Novo Registro de POI</h4>
+        <input type="hidden" id="modalPoiId">
+        <div class="modal-field">
+            <label>Identificação / Nome</label>
+            <input type="text" id="modalPoiNome" placeholder="Ex: Boqueta do Boguinha">
+        </div>
+        <div class="modal-grid-coords">
+            <div class="modal-field">
+                <label>Coordenada X</label>
+                <input type="text" id="modalPoiCoordX" placeholder="Ex: 500">
+            </div>
+            <div class="modal-field">
+                <label>Coordenada Y</label>
+                <input type="text" id="modalPoiCoordY" placeholder="Ex: 500">
+            </div>
+        </div>
+        <div class="modal-field">
+            <label>Ícone / Emoji</label>
+            <input type="text" id="modalPoiEmoji" value="📍" maxlength="4">
+        </div>
+        <div class="modal-field">
+            <label>Categorias de Rede</label>
+            <div class="modal-grid-cats" id="modalCategoriasContainer"></div>
+        </div>
+        <div class="modal-btns">
+            <button id="modalExcluirBtn" class="btn-remover" style="display:none; margin-right:auto;">🗑️ Excluir</button>
+            <button id="modalCancelarBtn" style="border-color: var(--neon-red); color: var(--neon-red);">Abortar</button>
+            <button id="modalSalvarBtn" style="border-color: var(--neon-lime); color: var(--neon-lime);">Registrar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalConfigLinha">
+    <div class="modal-content" style="border-color: var(--neon-blue); box-shadow: 0 0 35px rgba(14, 165, 233, 0.3);">
+        <h4>Configurar Barreira de Cenário</h4>
+        <div class="modal-field">
+            <label>Nome da Linha / Acidente Geográfico</label>
+            <input type="text" id="inputNomeLinha" placeholder="Ex: catatau">
+        </div>
+        <div class="modal-field">
+            <label>Estilo / Paleta Neon</label>
+            <select id="selectCorLinha">
+                <option value="#0ea5e9">🔵 </option>
+                <option value="#ef4444">🔴 </option>
+                <option value="#f97316">🟠 </option>
+                <option value="#a3e635">🟢 </option>
+                <option value="#e11d48">💖 </option>
+            </select>
+        </div>
+        <div class="modal-field">
+            <label>Tipo de Traçado</label>
+            <select id="selectTipoLinha">
+                <option value="continuo">Linha Contínua </option>
+                <option value="tracejado">Linha Tracejada </option>
+            </select>
+        </div>
+        <div class="modal-btns">
+            <button id="btnCancelarConfigLinha" style="border-color: var(--neon-red); color: var(--neon-red);">Abortar</button>
+            <button id="btnIniciarDesenhoLinha" style="border-color: var(--neon-lime); color: var(--neon-lime);">Iniciar Traçado</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { db } from "./firebase-config.js";
+    import { ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
+    import { obterMesaIdAtual, caminhoMesa } from "./mesa.js";
+    // ===================================================================
+    // Mapa por mesa: cada mesa (cada Mestre, ver auth.js do site
+    // principal) tem seu PRÓPRIO conjunto de marcações, sincronizadas em
+    // tempo real pelo Firebase (mesas/{mesaId}/mapaPois e mapaLinhas) —
+    // todo mundo vendo/mestrando essa mesa enxerga as mesmas marcações,
+    // ao vivo. O id da mesa vem da mesma sessão de login do site
+    // (localStorage "cdn_session", só funciona se o mapa foi aberto pelo
+    // botão "Mapa" da ficha — aberto direto/sem sessão, cai num aviso
+    // pra abrir pelo site).
+    const MESA_ID = obterMesaIdAtual();
+    if (!MESA_ID) {
+        alert("Não achei sua sessão de mesa. Abra o mapa pelo botão \"Mapa\" dentro da ficha (site principal), não direto pelo arquivo.");
+    }
+    // Chaves antigas (de antes de existir sincronização — cada
+    // navegador guardava tudo sozinho, sem mesa nem Firebase) — só lidas
+    // uma vez, pra puxar marcações feitas localmente antes dessa mudança
+    // e não perder nada (ver prepararDadosDaMesa).
+    const CHAVE_POIS_LOCAL_ANTIGA = `rpg_pois_${MESA_ID || "sem-mesa"}`;
+    const CHAVE_LINHAS_LOCAL_ANTIGA = `rpg_linhas_ambiente_${MESA_ID || "sem-mesa"}`;
+    document.addEventListener("DOMContentLoaded", () => {
+        const label = document.getElementById("mesaAtualLabel");
+        if (label) label.innerText = MESA_ID || "nenhuma (sessão não encontrada)";
+    });
+
+    // Registro inicial de cada mesa (POIs/linhas já existentes antes da
+    // separação por mesa) — só é usado se o navegador AINDA não tem nada
+    // salvo pra essa mesa (não sobrescreve edições futuras). Hoje só a
+    // 77³ (frkstnmsk) tem marcações herdadas do mapa único de antes;
+    // mesas novas simplesmente começam vazias.
+    const SEED_POIS_POR_MESA = {
+        frkstnmsk: [{"id": 1782656823522, "mapa": "distrito_norte", "nome": "Hadime Clinic Center", "emoji": "🏥", "lat": 3931.2213333333334, "lng": 1880.0146666666667, "categorias": ["compra/venda", "crime", "saúde", "serviço", "golden street"], "coordMundo": {"x": 1319, "y": 997}}, {"id": 1782656864915, "mapa": "distrito_norte", "nome": "galpão do crime", "emoji": "🏚️", "lat": 5564.16, "lng": 3027.408, "categorias": ["moradia", "crime", "north north"], "coordMundo": {"x": 2124, "y": 165}}, {"id": 1782656893090, "mapa": "distrito_norte", "nome": "Smanm Warehouse", "emoji": "🛠️", "lat": 5464.064, "lng": 3051.6386666666667, "categorias": ["compra/venda", "crime", "serviço", "north north"], "coordMundo": {"x": 2141, "y": 216}}, {"id": 1782656927346, "mapa": "distrito_norte", "nome": "Magnum Office", "emoji": "🏦", "lat": 5310.976, "lng": 3124.3306666666667, "categorias": ["crime organized", "serviço", "north north"], "coordMundo": {"x": 2192, "y": 294}}, {"id": 1782656957114, "mapa": "distrito_norte", "nome": "Noname Bar", "emoji": "👊", "lat": 5120.597333333333, "lng": 3187.045333333333, "categorias": ["social", "crime", "north north"], "coordMundo": {"x": 2236, "y": 391}}, {"id": 1782656983634, "mapa": "distrito_norte", "nome": "Dojo Strike First", "emoji": "🥊", "lat": 5122.5599999999995, "lng": 3098.674666666667, "categorias": ["serviço", "north north"], "coordMundo": {"x": 2174, "y": 390}}, {"id": 1782657039578, "mapa": "distrito_norte", "nome": "Quadra Cinza", "emoji": "🏢", "lat": 5373.781333333333, "lng": 3406.5466666666666, "categorias": ["moradia", "crime", "north north"], "coordMundo": {"x": 2390, "y": 262}}, {"id": 1782657065819, "mapa": "distrito_norte", "nome": "Laboratório Tesla", "emoji": "⚡", "lat": 5375.744, "lng": 3406.5466666666666, "categorias": ["crime", "bizarro", "tecnologia", "north north"], "coordMundo": {"x": 2390, "y": 261}}, {"id": 1782657084715, "mapa": "distrito_norte", "nome": "Noite Azul", "emoji": "🪩", "lat": 5383.594666666667, "lng": 3416.5240000000003, "categorias": ["social", "north north"], "coordMundo": {"x": 2397, "y": 257}}, {"id": 1782657112938, "mapa": "distrito_norte", "nome": "Racha", "emoji": "🚗", "lat": 5452.2880000000005, "lng": 3690.188, "categorias": ["social", "corrida", "crime organized", "north north"], "coordMundo": {"x": 2589, "y": 222}}, {"id": 1782657140010, "mapa": "distrito_norte", "nome": "Blood Bucket", "emoji": "🍺", "lat": 5038.165333333333, "lng": 3382.3160000000003, "categorias": ["social", "north north"], "coordMundo": {"x": 2373, "y": 433}}, {"id": 1782657169290, "mapa": "distrito_norte", "nome": "Galpão Maldito", "emoji": "☠️", "lat": 5646.592, "lng": 3524.8493333333336, "categorias": ["crime", "bizarro", "north north"], "coordMundo": {"x": 2473, "y": 123}}, {"id": 1782657186626, "mapa": "distrito_norte", "nome": "Entrada dos esgotos", "emoji": "🦖", "lat": 5646.592, "lng": 3533.4013333333332, "categorias": ["bizarro", "north north"], "coordMundo": {"x": 2479, "y": 123}}, {"id": 1782657396698, "mapa": "distrito_norte", "nome": "\"Set\" de gravações do Artista", "emoji": "🎬", "lat": 5625.002666666666, "lng": 3065.892, "categorias": ["crime", "bizarro", "north north"], "coordMundo": {"x": 2151, "y": 134}}, {"id": 1782657868931, "mapa": "distrito_norte", "nome": "Galpão com óleo", "emoji": "🛢️", "lat": 5564.16, "lng": 3021.7066666666665, "categorias": ["bizarro", "north north"], "coordMundo": {"x": 2120, "y": 165}}]
+    };
+    const SEED_LINHAS_POR_MESA = {
+        frkstnmsk: [{"id": 1782525435916, "mapa": "distrito_norte", "nome": "Córrego", "cor": "#0ea5e9", "tipo": "continuo", "latlngs": [[5514, 3396.96875], [5506, 3384.96875], [5511, 3369.96875], [5521, 3360.96875], [5527, 3352.96875], [5533, 3341.96875], [5542, 3327.96875], [5549, 3314.96875], [5552, 3302.96875], [5568, 3304.96875], [5577, 3306.96875], [5594, 3303.96875], [5603, 3303.96875], [5620, 3304.96875]]}, {"id": 1782525503452, "mapa": "distrito_norte", "nome": "Linha de trem desativada", "cor": "#a3e635", "tipo": "tracejado", "latlngs": [[5630, 3381.96875], [5618, 3380.96875], [5609, 3377.96875], [5602, 3365.96875], [5593, 3350.96875], [5575, 3335.96875], [5568, 3319.96875], [5578, 3299.96875], [5581, 3268.96875], [5582, 3243.96875], [5578, 3207.96875], [5568, 3169.96875], [5556, 3143.96875], [5547, 3116.96875], [5500, 3073.96875], [5476, 3035.984375], [5458, 3001.984375], [5440.5, 3000.984375], [5425, 3008.484375], [5420, 2999.484375], [5416.5, 2985.484375], [5408, 2968.96875], [5401.5, 2953.984375], [5402, 2947.984375], [5404, 2941.484375], [5410, 2933.984375], [5417.5, 2930.484375], [5430, 2914.96875], [5438.5, 2910.484375], [5432.5, 2896.484375], [5425, 2876.984375], [5417.5, 2863.984375], [5412.5, 2865.484375], [5403, 2868.484375], [5399.5, 2860.984375], [5396, 2848.984375], [5390, 2835.484375], [5367.5, 2831.484375]]}]
+    };
+
+    // Prepara os dados da mesa no Firebase, na seguinte ordem de
+    // prioridade, e SÓ NA PRIMEIRA VEZ (se já existe algo em
+    // mesas/{mesaId}/mapaPois não mexe em nada): 1) navegador tinha
+    // marcações salvas localmente de antes de existir sincronização →
+    // sobe elas pro Firebase; 2) tem um registro inicial embutido pra
+    // essa mesa (SEED_*_POR_MESA) → usa ele. Mesas novas sem nenhum dos
+    // dois simplesmente começam vazias, esperando a primeira marcação.
+    async function prepararDadosDaMesa() {
+        if (!MESA_ID) return;
+        const poisRef = ref(db, caminhoMesa("mapaPois"));
+        const snapPois = await get(poisRef);
+        if (!snapPois.exists()) {
+            const local = localStorage.getItem(CHAVE_POIS_LOCAL_ANTIGA) || localStorage.getItem("rpg_pois");
+            if (local) {
+                try { await set(poisRef, JSON.parse(local)); } catch (e) { /* ignora lixo local malformado */ }
+            } else if (SEED_POIS_POR_MESA[MESA_ID]) {
+                await set(poisRef, SEED_POIS_POR_MESA[MESA_ID]);
+            }
+        }
+        const linhasRef = ref(db, caminhoMesa("mapaLinhas"));
+        const snapLinhas = await get(linhasRef);
+        if (!snapLinhas.exists()) {
+            const local = localStorage.getItem(CHAVE_LINHAS_LOCAL_ANTIGA) || localStorage.getItem("rpg_linhas_ambiente");
+            if (local) {
+                try { await set(linhasRef, JSON.parse(local)); } catch (e) { /* ignora lixo local malformado */ }
+            } else if (SEED_LINHAS_POR_MESA[MESA_ID]) {
+                await set(linhasRef, SEED_LINHAS_POR_MESA[MESA_ID]);
+            }
+        }
+    }
+
+    const BANCO_MAPAS = {
+        distrito_norte: { nome: "Distrito Norte", url: "https://imgur.com/v8p3VvI.jpeg", larguraKm: 1000 },
+        // Mapa exclusivo da mesa do Luke (login "lukethemaster") — ver
+        // MAPA_POR_MESA logo abaixo, que decide qual chave daqui usar
+        // conforme o MESA_ID da sessão. Mesma largura de escala do mapa
+        // padrão por enquanto (1000km) — ajustar aqui se o Mestre luke
+        // quiser recalibrar a régua de distância desse mapa depois.
+        mapa_luke: { nome: "Mapa do Luke", url: "https://i.imgur.com/zgXmDrj.png", larguraKm: 1000 }
+    };
+
+    // Cada mesa pode ter seu próprio mapa (chave de BANCO_MAPAS acima).
+    // Quem não estiver listado aqui cai no padrão "distrito_norte".
+    const MAPA_POR_MESA = {
+        lukethemaster: "mapa_luke"
+    };
+
+    const mapaAtivoKey = MAPA_POR_MESA[MESA_ID] || "distrito_norte";
+
+    const CATEGORIAS_POI = [
+        "social", "compra/venda", "moradia", "corrida", "crime", 
+        "saúde", "burocracia", "crime organized", "bizarro", "atalho/buraco", 
+        "serviço", "tecnologia", "north north", 
+        "stone jungle", "mid side", "earth to heaven", "platinum block", 
+        "golden street", "iron lake"
+    ];
+
+    const CONFIG = { 
+        velocidades: { pe: 5, transporte: 36, carro: 60, uber: 60 } 
+    };
+    
+    let map, camadaImagemOverlay = null, camadaGrid = null, marcadoresAB = [], linhaDistancia = null, distanciaAtualKm = null, distanciaBrutaCoordenadas = 0;
+    let pois = [];
+    // Marcadores realmente adicionados ao mapa agora — rastreados à
+    // parte do array `pois` porque esse array é totalmente RESUBSTITUÍDO
+    // a cada atualização em tempo real do Firebase (perde as referências
+    // .marker antigas), então sem essa lista renderizarTodosPOIs() não
+    // teria como saber quais marcadores antigos remover.
+    let markersAtuais = [];
+    let categoriasVisiveis = new Set(CATEGORIAS_POI);
+    let imgLargura = 0, imgAltura = 0;
+    let coordenadasTemporarias = null;
+    let termoPesquisa = "";
+
+    /* VARIÁVEIS DO SISTEMA DE DESENHO DE LINHAS */
+    let linhasCustomizadas = [];
+    let camadaLinhasAmbiente = null;
+    let modoDesenhoAtivo = false;
+    let pontosLinhaAtual = [];
+    let polylinePreviewDesenho = null;
+    let configLinhaAtual = { nome: "", cor: "", tipo: "" };
+
+    function abrirModalCriacao(latlng) {
+        document.getElementById("modalTitulo").innerText = "Novo Registro de POI";
+        document.getElementById("modalPoiId").value = "";
+        document.getElementById("modalPoiNome").value = "";
+        document.getElementById("modalPoiEmoji").value = "📍";
+        document.getElementById("modalExcluirBtn").style.display = "none";
+        coordenadasTemporarias = latlng;
+        
+        const coordMundo = pixelParaCoordenadaMundo(latlng.lng, latlng.lat);
+        document.getElementById("modalPoiCoordX").value = coordMundo.x;
+        document.getElementById("modalPoiCoordY").value = coordMundo.y;
+        
+        document.querySelectorAll("#modalCategoriasContainer input").forEach(cb => {
+            cb.checked = false;
+        });
+        
+        document.getElementById("poiModal").classList.add("active");
+    }
+
+    function abrirModalEdicao(id) {
+        const p = pois.find(x => x.id === id);
+        if (!p) return;
+
+        document.getElementById("modalTitulo").innerText = "Editar Registro de POI";
+        document.getElementById("modalPoiId").value = p.id;
+        document.getElementById("modalPoiNome").value = p.nome;
+        document.getElementById("modalPoiEmoji").value = p.emoji || "📍";
+        document.getElementById("modalExcluirBtn").style.display = "block";
+        coordenadasTemporarias = null;
+
+        document.getElementById("modalPoiCoordX").value = p.coordMundo.x;
+        document.getElementById("modalPoiCoordY").value = p.coordMundo.y;
+
+        document.querySelectorAll("#modalCategoriasContainer input").forEach(cb => {
+            cb.checked = p.categorias ? p.categorias.includes(cb.value) : false;
+        });
+
+        document.getElementById("poiModal").classList.add("active");
+    }
+
+    function executingSalvarModal() {
+        const idSalvar = document.getElementById("modalPoiId").value;
+        const nome = document.getElementById("modalPoiNome").value.trim();
+        const emoji = document.getElementById("modalPoiEmoji").value.trim() || "📍";
+        if (!nome) { alert("O nome do registro é obrigatório."); return; }
+        
+        const cx = parseInt(document.getElementById("modalPoiCoordX").value.trim());
+        const cy = parseInt(document.getElementById("modalPoiCoordY").value.trim());
+        if (isNaN(cx) || isNaN(cy)) { alert("As coordenadas X e Y precisam ser números válidos."); return; }
+        
+        const catsSelecionadas = [];
+        document.querySelectorAll("#modalCategoriasContainer input:checked").forEach(cb => {
+            catsSelecionadas.push(cb.value);
+        });
+
+        const pixelCoords = coordenadaMundoParaPixel(cx, cy);
+
+        if (idSalvar) {
+            const p = pois.find(x => x.id === parseInt(idSalvar));
+            if (p) {
+                p.nome = nome;
+                p.emoji = emoji;
+                p.categorias = catsSelecionadas;
+                p.coordMundo = { x: cx, y: cy };
+                p.lat = pixelCoords.lat;
+                p.lng = pixelCoords.lng;
+                if (p.marker) map.removeLayer(p.marker);
+                desenharPOI(p);
+            }
+        } else {
+            const novo = { 
+                id: Date.now(), 
+                mapa: mapaAtivoKey,
+                nome, 
+                emoji, 
+                lat: pixelCoords.lat, 
+                lng: pixelCoords.lng, 
+                categorias: catsSelecionadas, 
+                coordMundo: { x: cx, y: cy }
+            };
+            pois.push(novo); 
+            desenharPOI(novo); 
+        }
+
+        salvarColecao();
+        atualizarListaPOI(); 
+        atualizarVisibilidadePOIs();
+        document.getElementById("poiModal").classList.remove("active");
+        coordenadasTemporarias = null;
+    }
+
+    function executarExcluirModal() {
+        const idDeletar = document.getElementById("modalPoiId").value;
+        if (idDeletar) {
+            removerPOI(parseInt(idDeletar));
+            document.getElementById("poiModal").classList.remove("active");
+        }
+    }
+
+    function iniciarMapa(img) {
+        imgLargura = img.width;
+        imgAltura = img.height;
+
+        map = L.map('map', { crs: L.CRS.Simple, minZoom: -2, maxZoom: 4 });
+        const bounds = [[0, 0], [imgAltura, imgLargura]];
+        camadaImagemOverlay = L.imageOverlay(BANCO_MAPAS[mapaAtivoKey].url, bounds).addTo(map);
+        map.fitBounds(bounds);
+        map.setMaxBounds(bounds);
+        map.setView([imgAltura / 2, imgLargura / 2], -1);
+
+        camadaGrid = L.layerGroup().addTo(map);
+        for (let i = 0; i <= 3000; i += 200) {
+            const xPos = (i / 3000) * imgLargura;
+            const yPos = (i / 3000) * imgAltura;
+            L.polyline([[0, xPos], [imgAltura, xPos]], { color: '#8b5cf6', weight: 1, opacity: 0.25 }).addTo(camadaGrid);
+            L.polyline([[yPos, 0], [yPos, imgLargura]], { color: '#8b5cf6', weight: 1, opacity: 0.25 }).addTo(camadaGrid);
+            L.marker([imgAltura - 4, xPos], { icon: L.divIcon({ className: '', html: `<div style="font-size:8px; font-family:'JetBrains Mono'; background:#0a0a0ccc; color:#a3e635; padding:2px 4px; border:1px solid rgba(139,92,246,0.3);">${i}</div>`, iconSize: [30, 16] }) }).addTo(camadaGrid);
+            L.marker([yPos, 2], { icon: L.divIcon({ className: '', html: `<div style="font-size:8px; font-family:'JetBrains Mono'; background:#0a0a0ccc; color:#a3e635; padding:2px 4px; border:1px solid rgba(139,92,246,0.3);">${i}</div>`, iconSize: [30, 16] }) }).addTo(camadaGrid);
+        }
+
+        camadaLinhasAmbiente = L.layerGroup().addTo(map);
+
+        map.on('click', (e) => {
+            if (modoDesenhoAtivo) {
+                pontosLinhaAtual.push([e.latlng.lat, e.latlng.lng]);
+                document.getElementById("txtStatusDesenho").innerText = `Pontos marcados: ${pontosLinhaAtual.length}. Continue clicando ou salve a barreira.`;
+                
+                if (!polylinePreviewDesenho) {
+                    polylinePreviewDesenho = L.polyline(pontosLinhaAtual, {
+                        color: configLinhaAtual.cor,
+                        weight: configLinhaAtual.tipo === 'tracejado' ? 4 : 6,
+                        dashArray: configLinhaAtual.tipo === 'tracejado' ? '10, 10' : null,
+                        opacity: 0.8
+                    }).addTo(map);
+                } else {
+                    polylinePreviewDesenho.setLatLngs(pontosLinhaAtual);
+                }
+                return;
+            }
+
+            if (e.originalEvent.shiftKey) {
+                abrirModalCriacao(e.latlng);
+            } else {
+                const lat = e.latlng.lat, lng = e.latlng.lng;
+                if (lat >= 0 && lat <= imgAltura && lng >= 0 && lng <= imgLargura) {
+                    adicionarPontoAB(lat, lng, pixelParaCoordenadaMundo(lng, lat));
+                }
+            }
+        });
+
+        document.getElementById("modalCancelarBtn").onclick = () => {
+            document.getElementById("poiModal").classList.remove("active");
+            coordenadasTemporarias = null;
+        };
+
+        document.getElementById("modalSalvarBtn").onclick = executingSalvarModal;
+        document.getElementById("modalExcluirBtn").onclick = executarExcluirModal;
+
+        document.getElementById("buscaPoiInput").addEventListener("input", (e) => {
+            termoPesquisa = e.target.value.toLowerCase().trim();
+            atualizarListaPOI();
+        });
+
+        map.on('mousemove', (e) => {
+            const x = e.latlng.lng, y = e.latlng.lat;
+            if (x >= 0 && x <= imgLargura && y >= 0 && y <= imgAltura) {
+                const coord = pixelParaCoordenadaMundo(x, y);
+                document.getElementById('mouseCoord').innerText = `${coord.x} , ${coord.y}`;
+            } else { document.getElementById('mouseCoord').innerText = '-- , --'; }
+        });
+
+        document.getElementById('limparPontosBtn').onclick = () => {
+            marcadoresAB.forEach(m => map.removeLayer(m.marker)); marcadoresAB = [];
+            if (linhaDistancia) map.removeLayer(linhaDistancia); linhaDistancia = null;
+            distanciaAtualKm = null; distanciaBrutaCoordenadas = 0; atualizarPainel();
+        };
+
+        document.querySelectorAll('input[name="modo"]').forEach(r => r.onchange = () => atualizarPainel());
+        
+        /* GERENCIADORES DE ENGENHARIA DE LINHAS CUSTOMIZADAS */
+        document.getElementById("btnModoDesenhoLinha").onclick = () => {
+            document.getElementById("inputNomeLinha").value = "";
+            document.getElementById("modalConfigLinha").classList.add("active");
+        };
+
+        document.getElementById("btnCancelarConfigLinha").onclick = () => {
+            document.getElementById("modalConfigLinha").classList.remove("active");
+        };
+
+        document.getElementById("btnIniciarDesenhoLinha").onclick = () => {
+            const nome = document.getElementById("inputNomeLinha").value.trim();
+            if (!nome) { alert("Dê uma identificação à barreira antes de traçar."); return; }
+            
+            configLinhaAtual = {
+                nome: nome,
+                cor: document.getElementById("selectCorLinha").value,
+                tipo: document.getElementById("selectTipoLinha").value
+            };
+
+            document.getElementById("modalConfigLinha").classList.remove("active");
+            
+            modoDesenhoAtivo = true;
+            pontosLinhaAtual = [];
+            if(polylinePreviewDesenho) { map.removeLayer(polylinePreviewDesenho); polylinePreviewDesenho = null; }
+            
+            document.getElementById("painelDefaultInfo").style.display = "none";
+            document.getElementById("painelDesenhoInfo").style.display = "flex";
+            document.getElementById("txtStatusDesenho").innerText = "Modo Construtor ativo: vá clicando no mapa para desenhar o trajeto...";
+        };
+
+        document.getElementById("btnCancelarDesenho").onclick = () => {
+            finalizarModoDesenho();
+        };
+
+        document.getElementById("btnSalvarDesenho").onclick = () => {
+            if (pontosLinhaAtual.length < 2) { alert("Marque ao menos 2 nós/pontos no mapa para consolidar uma linha."); return; }
+            
+            const novaLinha = {
+                id: Date.now(),
+                mapa: mapaAtivoKey,
+                nome: configLinhaAtual.nome,
+                cor: configLinhaAtual.cor,
+                tipo: configLinhaAtual.tipo,
+                latlngs: pontosLinhaAtual
+            };
+
+            linhasCustomizadas.push(novaLinha);
+            salvarLinhas();
+            
+            renderizarTodasLinhasAmbiente();
+            finalizarModoDesenho();
+        };
+
+        document.getElementById("btnLimparTodasLinhas").onclick = () => {
+            if(confirm("Deseja apagar todas as linhas geográficas dessa mesa (pra todo mundo)?")) {
+                linhasCustomizadas = [];
+                salvarLinhas();
+                renderizarTodasLinhasAmbiente();
+            }
+        };
+
+        function finalizarModoDesenho() {
+            modoDesenhoAtivo = false;
+            pontosLinhaAtual = [];
+            if (polylinePreviewDesenho) { map.removeLayer(polylinePreviewDesenho); polylinePreviewDesenho = null; }
+            document.getElementById("painelDesenhoInfo").style.display = "none";
+            document.getElementById("painelDefaultInfo").style.display = "flex";
+        }
+
+        (function criarFiltrosCategorias() {
+            const container = document.getElementById("filtrosCategorias");
+            container.innerHTML = "";
+            CATEGORIAS_POI.forEach(cat => {
+                const label = document.createElement("label");
+                label.innerHTML = `<input type="checkbox" checked value="${cat}"> ${cat}`;
+                label.querySelector("input").addEventListener("change", (e) => {
+                    if (e.target.checked) categoriasVisiveis.add(cat);
+                    else categoriasVisiveis.delete(cat);
+                    atualizarVisibilidadePOIs();
+                });
+                container.appendChild(label);
+            });
+        })();
+
+        (function construirCategoriasModal() {
+            const container = document.getElementById("modalCategoriasContainer");
+            container.innerHTML = "";
+            CATEGORIAS_POI.forEach(cat => {
+                const label = document.createElement("label");
+                label.innerHTML = `<input type="checkbox" value="${cat}"> ${cat}`;
+                container.appendChild(label);
+            });
+        })();
+        
+        // Sobe o registro inicial (se for a primeira vez dessa mesa no
+        // Firebase) e então liga a sincronização ao vivo: dali pra
+        // frente, qualquer marcação feita por QUALQUER PESSOA na mesma
+        // mesa aparece automaticamente pra todo mundo vendo o mapa.
+        prepararDadosDaMesa().then(() => {
+            if (!MESA_ID) return;
+            onValue(ref(db, caminhoMesa("mapaPois")), (snap) => {
+                const dados = snap.val();
+                pois = Array.isArray(dados) ? dados : Object.values(dados || {});
+                pois.forEach(p => {
+                    const px = coordenadaMundoParaPixel(p.coordMundo.x, p.coordMundo.y);
+                    p.lat = px.lat;
+                    p.lng = px.lng;
+                });
+                renderizarTodosPOIs();
+                atualizarListaPOI();
+                atualizarVisibilidadePOIs();
+            });
+            onValue(ref(db, caminhoMesa("mapaLinhas")), (snap) => {
+                const dados = snap.val();
+                linhasCustomizadas = Array.isArray(dados) ? dados : Object.values(dados || {});
+                renderizarTodasLinhasAmbiente();
+            });
+        });
+    }
+
+    function renderizarTodasLinhasAmbiente() {
+        if (!camadaLinhasAmbiente) return;
+        camadaLinhasAmbiente.clearLayers();
+
+        linhasCustomizadas.forEach(line => {
+            L.polyline(line.latlngs, {
+                color: line.cor,
+                weight: line.tipo === 'tracejado' ? 4 : 6,
+                dashArray: line.tipo === 'tracejado' ? '10, 10' : null,
+                opacity: 0.75,
+                lineJoin: 'round'
+            }).addTo(camadaLinhasAmbiente).bindTooltip(line.nome, { sticky: true });
+        });
+    }
+
+    function pixelParaCoordenadaMundo(px, py) {
+        const x = (px / imgLargura) * 3000;
+        const y = ((imgAltura - py) / imgAltura) * 3000;
+        return { x: Math.round(x), y: Math.round(y) };
+    }
+
+    function coordenadaMundoParaPixel(cx, cy) {
+        const px = (cx / 3000) * imgLargura;
+        const py = imgAltura - ((cy / 3000) * imgAltura);
+        return { lat: py, lng: px };
+    }
+
+    function calcularDistanciaBruta(c1, c2) {
+        return Math.sqrt(Math.pow(c1.x - c2.x, 2) + Math.pow(c1.y - c2.y, 2));
+    }
+
+    function formatarDistancia(km) { return km >= 100 ? km.toFixed(0) + " km" : km >= 1 ? km.toFixed(1) + " km" : (km*1000).toFixed(0) + " m"; }
+    function formatarTempo(horas) { if (isNaN(horas)) return "∞"; const hrs = Math.floor(horas), mins = Math.round((horas - hrs) * 60); return hrs === 0 ? mins + " min" : mins === 0 ? hrs + " h" : hrs + "h " + mins + "min"; }
+
+    function atualizarPainel() {
+        if (distanciaAtualKm === null) { 
+            document.getElementById('distanciaVal').innerText = '---'; 
+            document.getElementById('tempoVal').innerText = '---'; 
+            return; 
+        }
+        const modo = document.querySelector('input[name="modo"]:checked').value;
+        const horas = distanciaAtualKm / CONFIG.velocidades[modo];
+        
+        document.getElementById('distanciaVal').innerHTML = formatarDistancia(distanciaAtualKm);
+        
+        let outputTempo = formatarTempo(horas);
+        
+        if (modo === 'uber') {
+            const custoCN = Math.round((distanciaBrutaCoordenadas / 90) * 10);
+            outputTempo += ` <span style="color:#e11d48; margin-left:8px;">[CN$ ${custoCN}]</span>`;
+        }
+        
+        let emojiModo = '🚶';
+        if(modo === 'carro') emojiModo = '🚗';
+        else if(modo === 'transporte') emojiModo = '🚌';
+        else if(modo === 'uber') emojiModo = '📱';
+
+        document.getElementById('tempoVal').innerHTML = outputTempo + ` (${emojiModo})`;
+    }
+
+    function atualizarLinha() {
+        if (linhaDistancia) map.removeLayer(linhaDistancia);
+        if (marcadoresAB.length === 2) { linhaDistancia = L.polyline(marcadoresAB.map(m => m.marker.getLatLng()), { color: '#a3e635', weight: 2.5, dashArray: '4, 4' }).addTo(map); }
+    }
+
+    function adicionarPontoAB(lat, lng, coordMundo) {
+        if (marcadoresAB.length >= 2) { map.removeLayer(marcadoresAB[0].marker); marcadoresAB.shift(); }
+        const nome = marcadoresAB.length === 0 ? 'A' : 'B', cor = nome === 'A' ? '#8b5cf6' : '#ef4444';
+        const icon = L.divIcon({ className: '', html: `<div style="background:${cor}; color:white; width:24px; height:24px; display:flex; align-items:center; justify-content:center; border-radius:2px; border:1px solid #ffffff; font-family:'Space Grotesk'; font-weight: bold; font-size:0.75rem;">${nome}</div>`, iconSize: [24,24] });
+        const marker = L.marker([lat, lng], { icon }).addTo(map);
+        marker.bindPopup(`<b>Vetor ${nome}</b><br>(${coordMundo.x}, ${coordMundo.y})`);
+        marcadoresAB.push({ marker, coordMundo, nome });
+        
+        if (marcadoresAB.length === 2) { 
+            const mapaInfo = BANCO_MAPAS[mapaAtivoKey];
+            distanciaBrutaCoordenadas = calcularDistanciaBruta(marcadoresAB[0].coordMundo, marcadoresAB[1].coordMundo);
+            distanciaAtualKm = (distanciaBrutaCoordenadas / 3000) * mapaInfo.larguraKm; 
+        }
+        else { 
+            distanciaAtualKm = null; 
+            distanciaBrutaCoordenadas = 0;
+        }
+        atualizarPainel(); atualizarLinha();
+    }
+
+    document.getElementById('exportarPoisBtn').onclick = () => {
+        const json = JSON.stringify({ 
+            versao: 4, 
+            exportadoEm: new Date().toISOString(), 
+            pois: pois.map(p => ({ id: p.id, mapa: p.mapa, nome: p.nome, emoji: p.emoji, lat: p.lat, lng: p.lng, categorias: p.categorias || [], coordMundo: p.coordMundo })), 
+            linhasCustomizadas: linhasCustomizadas 
+        }, null, 2);
+        
+        const a = document.createElement("a"); 
+        a.href = URL.createObjectURL(new Blob([json], { type: "application/json" })); 
+        a.download = `rpg_distrito_norte_backup_${MESA_ID || "sem-mesa"}.json`; 
+        document.body.appendChild(a); 
+        a.click(); 
+        document.body.removeChild(a);
+    };
+
+    document.getElementById('importarPoisBtn').onclick = () => document.getElementById('arquivoImportacao').click();
+
+    // Backup em Nuvem: salva o estado ATUAL de pois + linhas dessa mesa
+    // num nó separado do Firebase (mapaBackup), sem mexer no mapa "ao
+    // vivo" (mapaPois/mapaLinhas). Serve como ponto de restauração —
+    // ver btnRecarregarSeed logo abaixo, que volta pra essa última
+    // versão salva aqui.
+    document.getElementById('btnSalvarBackupNuvem').onclick = async () => {
+        if (!MESA_ID) { alert("Sem mesa detectada na sessão — abra o mapa pelo botão \"Mapa\" da ficha."); return; }
+        if (!confirm("Salvar o estado atual do mapa dessa mesa como backup na nuvem? Isso substitui o backup salvo anteriormente (se houver).")) return;
+        const poisLimpos = pois.map(p => ({ id: p.id, mapa: p.mapa, nome: p.nome, emoji: p.emoji, lat: p.lat, lng: p.lng, categorias: p.categorias || [], coordMundo: p.coordMundo }));
+        await set(ref(db, caminhoMesa("mapaBackup")), {
+            pois: poisLimpos,
+            linhas: linhasCustomizadas,
+            salvoEm: new Date().toISOString()
+        });
+        alert("Backup do mapa salvo na nuvem.");
+    };
+
+    // Botão de recuperação manual: sobrescreve o que estiver salvo AGORA
+    // pra essa mesa com o ÚLTIMO backup em nuvem feito pelo botão
+    // "Salvar Mapa (Backup Nuvem)" acima. Se essa mesa nunca salvou um
+    // backup em nuvem, cai pro registro inicial embutido (SEED_*_POR_MESA)
+    // como antes — hoje só a 77³ (frkstnmsk) tem um desses cadastrado.
+    document.getElementById('btnRecarregarSeed').onclick = async () => {
+        if (!MESA_ID) { alert("Sem mesa detectada na sessão — abra o mapa pelo botão \"Mapa\" da ficha."); return; }
+
+        const snapBackup = await get(ref(db, caminhoMesa("mapaBackup")));
+        if (snapBackup.exists()) {
+            const backup = snapBackup.val();
+            const dataFormatada = backup.salvoEm ? new Date(backup.salvoEm).toLocaleString("pt-BR") : "data desconhecida";
+            if (!confirm(`Isso substitui TODAS as marcações e linhas dessa mesa (pra todo mundo) pelo último backup salvo (${dataFormatada}). Continuar?`)) return;
+            await set(ref(db, caminhoMesa("mapaPois")), backup.pois || []);
+            await set(ref(db, caminhoMesa("mapaLinhas")), backup.linhas || []);
+            return;
+        }
+
+        const temSeedPois = !!SEED_POIS_POR_MESA[MESA_ID];
+        const temSeedLinhas = !!SEED_LINHAS_POR_MESA[MESA_ID];
+        if (!temSeedPois && !temSeedLinhas) {
+            alert(`Essa mesa ainda não tem nenhum backup em nuvem salvo (use "☁️ Salvar Mapa" primeiro), e não há registro inicial cadastrado pra mesa "${MESA_ID}" — só a 77³ (frkstnmsk) tem um até agora.`);
+            return;
+        }
+        if (!confirm("Isso substitui TODAS as marcações e linhas dessa mesa (pra todo mundo) pelo registro inicial. Continuar?")) return;
+        if (temSeedPois) await set(ref(db, caminhoMesa("mapaPois")), SEED_POIS_POR_MESA[MESA_ID]);
+        if (temSeedLinhas) await set(ref(db, caminhoMesa("mapaLinhas")), SEED_LINHAS_POR_MESA[MESA_ID]);
+    };
+    document.getElementById('arquivoImportacao').addEventListener('change', (e) => {
+        const arquivo = e.target.files[0]; if (!arquivo) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) { 
+            try { 
+                const data = JSON.parse(ev.target.result);
+                
+                if(data.pois) {
+                    data.pois.forEach(p => { 
+                        if (!pois.some(x => x.id === p.id)) { pois.push(p); } 
+                    });
+                }
+                
+                if(data.linhasCustomizadas) {
+                    data.linhasCustomizadas.forEach(l => {
+                        if(!linhasCustomizadas.some(x => x.id === l.id)) { linhasCustomizadas.push(l); }
+                    });
+                }
+                
+                salvarColecao(); 
+                salvarLinhas();
+                alert("Backup unificado restaurado com sucesso pra todo mundo vendo essa mesa!");
+            } catch(err) { alert("Erro ao ler o arquivo JSON."); } 
+        };
+        reader.readAsText(arquivo);
+    });
+
+    function desenharPOI(p) {
+        const icon = L.divIcon({ className: '', html: `<div style="background:#0a0a0c; color:white; width:25px; height:25px; display:flex; align-items:center; justify-content:center; border-radius:4px; border:1px solid var(--neon-purple); box-shadow: 0 0 10px rgba(139,92,246,0.6); font-size:1rem;">${p.emoji || "📍"}</div>`, iconSize: [36,36] });
+        const marker = L.marker([p.lat, p.lng], { icon });
+        
+        marker.bindTooltip(p.nome, { className: 'leaflet-tooltip-nordeste', sticky: true, direction: 'auto' });
+        
+        marker.on('click', () => { 
+            if(!modoDesenhoAtivo) adicionarPontoAB(p.lat, p.lng, p.coordMundo); 
+        });
+
+        const popupConteudo = `
+            <div class="popup-poi-container">
+                <b style="color: #ffffff; font-family:'Space Grotesk'; font-size:0.85rem;">${p.nome}</b>
+                <span style="font-size: 0.65rem; color: var(--neon-purple); text-transform:uppercase; font-weight:bold; display:block;">🏷️ ${p.categorias?.join(", ") || "Sem categoria"}</span>
+                <div class="popup-btn-group">
+                    <button class="goto-poi" data-id="${p.id}" style="border-color: var(--neon-lime); color: var(--neon-lime);">Focar</button>
+                    <button class="edit-poi-popup" data-id="${p.id}" style="border-color: var(--neon-blue); color: var(--neon-blue);">📝 Editar</button>
+                </div>
+            </div>`;
+            
+        marker.bindPopup(popupConteudo);
+        
+        marker.on('popupopen', () => {
+            document.querySelector(`.goto-poi[data-id="${p.id}"]`)?.addEventListener('click', () => {
+                map.setView([p.lat, p.lng], map.getZoom());
+            });
+            document.querySelector(`.edit-poi-popup[data-id="${p.id}"]`)?.addEventListener('click', () => {
+                marker.closePopup();
+                abrirModalEdicao(p.id);
+            });
+        });
+        
+        p.marker = marker;
+        markersAtuais.push(marker);
+        const visivel = !p.categorias || p.categorias.length === 0 || p.categorias.some(cat => categoriasVisiveis.has(cat));
+        if (visivel) {
+            marker.addTo(map);
+        }
+    }
+
+    // Redesenha TODOS os POIs do zero (limpa os marcadores atuais e
+    // recria a partir de `pois`) — chamada sempre que a sincronização ao
+    // vivo do Firebase traz um estado novo, seja de uma edição sua ou de
+    // qualquer outra pessoa vendo essa mesa. Evita marcador duplicado.
+    function renderizarTodosPOIs() {
+        markersAtuais.forEach(m => map.removeLayer(m));
+        markersAtuais = [];
+        pois.forEach(p => desenharPOI(p));
+    }
+
+    function removerPOI(id) {
+        pois = pois.filter(p => p.id !== id);
+        salvarColecao();
+        atualizarListaPOI();
+    }
+
+    function salvarColecao() {
+        const limpo = pois.map(p => ({ id: p.id, mapa: p.mapa, nome: p.nome, emoji: p.emoji, lat: p.lat, lng: p.lng, categorias: p.categorias || [], coordMundo: p.coordMundo }));
+        if (!MESA_ID) return;
+        set(ref(db, caminhoMesa("mapaPois")), limpo);
+    }
+
+    function salvarLinhas() {
+        if (!MESA_ID) return;
+        set(ref(db, caminhoMesa("mapaLinhas")), linhasCustomizadas);
+    }
+
+    function atualizarVisibilidadePOIs() { 
+        pois.forEach(p => { 
+            if (p.marker) {
+                const visivel = !p.categorias || p.categorias.length === 0 || p.categorias.some(cat => categoriasVisiveis.has(cat)); 
+                if (visivel) { if (!map.hasLayer(p.marker)) p.marker.addTo(map); } 
+                else { if (map.hasLayer(p.marker)) map.removeLayer(p.marker); } 
+            }
+        }); 
+    }
+
+    function atualizarListaPOI() {
+        const ul = document.getElementById('poiList'); 
+        const poisFiltrados = pois.filter(p => p.nome.toLowerCase().includes(termoPesquisa));
+
+        if (poisFiltrados.length === 0) { 
+            ul.innerHTML = `<li style="color:var(--text-dim); font-style:italic; justify-content:center; background:none; border:none; font-size:0.75rem;">tem nem onde morrer</li>`; 
+            return; 
+        }
+        
+        ul.innerHTML = '';
+        poisFiltrados.forEach(p => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <strong title="${p.nome}">${p.emoji || "📍"} ${p.nome}</strong>
+                <div class="poi-actions">
+                    <button class="btn-editar" data-id="${p.id}">📝</button>
+                    <button class="poi-ir" data-id="${p.id}">📍</button>
+                </div>`;
+            ul.appendChild(li);
+        });
+
+        document.querySelectorAll('.poi-ir').forEach(btn => btn.addEventListener('click', () => { 
+            const p = pois.find(x => x.id === parseInt(btn.dataset.id)); 
+            if(p) map.setView([p.lat, p.lng], map.getZoom()); 
+        }));
+        
+        document.querySelectorAll('.btn-editar').forEach(btn => btn.addEventListener('click', () => { 
+            abrirModalEdicao(parseInt(btn.dataset.id)); 
+        }));
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const imgTemp = new Image();
+        imgTemp.onload = function() { console.log("IMAGEM CARREGOU"); iniciarMapa(this); };
+        imgTemp.onerror = function() { console.log("ERRO CRÍTICO ALVO: Não foi possível carregar a imagem do mapa."); };
+        imgTemp.src = BANCO_MAPAS[mapaAtivoKey].url;
+    });
+</script>
+</body>
+</html>

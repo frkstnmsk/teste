@@ -1,0 +1,3313 @@
+/* =====================================================================
+   CHUVA DE NEON — Estilos específicos da Ficha
+   ===================================================================== */
+
+.loading-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+}
+.loading-screen p { color: var(--text-dim); font-size: 0.85rem; }
+
+.app-shell {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 20px;
+    padding-top: calc(var(--topbar-h, 90px) + 20px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ---------- Topbar ----------
+   Fixa no topo da tela (a barra de vida/energia precisa estar sempre
+   visível, mesmo com a página rolada). A altura real é medida em JS
+   (ver ajustarEspacoTopbar em ficha.js) pra empurrar o conteúdo abaixo
+   dela na medida certa, já que ela quebra linha em telas menores. */
+.topbar {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 1320px;
+    z-index: 4000;
+    border-radius: 0 0 14px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 22px;
+    flex-wrap: wrap;
+}
+.topbar-id h1 {
+    font-size: 1.3rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #fff;
+    margin-top: 4px;
+}
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+.sync-indicator {
+    color: var(--neon-lime);
+    text-shadow: 0 0 8px rgba(163, 230, 53, 0.7);
+    font-size: 0.9rem;
+}
+.sync-indicator.offline { color: var(--neon-red); text-shadow: 0 0 8px rgba(239, 68, 68, 0.7); }
+
+/* ---------- Barras de PV/Energia + equipados (topbar, centralizado) ---------- */
+.topbar-vitals {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 0 auto;
+}
+.vital-bar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.vital-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.vital-bar-label {
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    width: 22px;
+    flex-shrink: 0;
+}
+.vital-bar-track {
+    width: 130px;
+    height: 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+}
+.vital-bar-fill {
+    height: 100%;
+    width: 100%;
+    border-radius: 6px;
+    background: var(--neon-lime);
+    box-shadow: 0 0 8px rgba(163, 230, 53, 0.6);
+    transition: width 0.35s ease, background-color 0.35s ease, box-shadow 0.35s ease;
+}
+.vital-bar-fill.vital-cor-media {
+    background: var(--neon-gold);
+    box-shadow: 0 0 8px rgba(250, 204, 21, 0.6);
+}
+.vital-bar-fill.vital-cor-critica {
+    background: var(--neon-red);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.65);
+}
+.vital-bar-numero {
+    font-size: 0.75rem;
+    color: #fff;
+    min-width: 52px;
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+}
+.vital-equipados {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    max-width: 260px;
+}
+.vital-equipado-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--neon-purple);
+    color: var(--neon-purple);
+    background: rgba(139, 92, 246, 0.08);
+    white-space: nowrap;
+}
+.vital-equipado-vazio {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    font-style: italic;
+}
+
+/* ---------- Carrossel de status ativos (topbar) ---------- */
+.vital-status-carrossel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--neon-red);
+    color: var(--neon-red);
+    background: rgba(239, 68, 68, 0.1);
+    font-size: 0.72rem;
+    white-space: nowrap;
+    max-width: 240px;
+    animation: vital-status-pulso 2.4s ease-in-out infinite;
+}
+.vital-status-icone {
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.vital-status-texto {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+@keyframes vital-status-pulso {
+    0%, 100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+    50% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.55); }
+}
+@media (max-width: 720px) {
+    .topbar-vitals { justify-content: flex-start; margin: 0; width: 100%; order: 3; }
+}
+
+/* ---------- Destaque "muito ferido" (Muito Machucado / Energia Crítica) ---------- */
+.ficha-muito-ferido {
+    border-radius: 18px;
+    animation: ficha-muito-ferido-pulso 2.6s ease-in-out infinite;
+}
+@keyframes ficha-muito-ferido-pulso {
+    0%, 100% { box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.55), 0 0 14px rgba(239, 68, 68, 0.25); }
+    50% { box-shadow: inset 0 0 0 4px rgba(239, 68, 68, 0.95), 0 0 34px rgba(239, 68, 68, 0.55); }
+}
+
+/* ---------- Efeito ao levar dano (flash + tremor) ---------- */
+.efeito-dano-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle, rgba(239, 68, 68, 0) 0%, rgba(239, 68, 68, 0.4) 100%);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 9999;
+}
+.efeito-dano-overlay.efeito-dano-ativo {
+    animation: efeito-dano-flash 0.5s ease-out;
+}
+@keyframes efeito-dano-flash {
+    0% { opacity: 0; }
+    12% { opacity: 1; }
+    100% { opacity: 0; }
+}
+.app-shell.efeito-dano-tremor {
+    animation: efeito-dano-shake 0.4s ease-in-out;
+}
+@keyframes efeito-dano-shake {
+    0%, 100% { transform: translateX(0); }
+    15%, 55% { transform: translateX(-6px); }
+    30%, 70% { transform: translateX(6px); }
+    45% { transform: translateX(-3px); }
+    85% { transform: translateX(3px); }
+}
+
+/* ---------- Scroll infinito (Banco Global de Itens/Receitas) ---------- */
+.scroll-infinito-sentinela {
+    height: 1px;
+}
+.scroll-infinito-contador {
+    display: block;
+    margin: -4px 0 10px 0;
+}
+
+#painel-mestre-seletor { display: flex; gap: 8px; flex-wrap: wrap; }
+#painel-mestre-seletor select { min-width: 220px; }
+
+/* ---------- Painel de info do topo (janela deslizante) ----------
+   Guarda o que não precisa ficar sempre visível na topbar fixa: cargo,
+   mesa, godmode, seletor de ficha/NPC do Mestre, indicador de sincronia
+   e os botões de Painel do Mestre / Gerenciador de Combate. Abre a
+   partir do botão de menu (#btn-abrir-info-topo), encostado no topo
+   direito, sem escurecer o resto da ficha. A posição "top" real é
+   ajustada em JS (ver ajustarEspacoTopbar em ficha.js) pra ficar sempre
+   colada logo abaixo da topbar, mesmo quando ela quebra linha. */
+.painel-info-topo {
+    position: fixed;
+    top: calc(var(--topbar-h, 90px) + 8px);
+    right: 16px;
+    z-index: 3999;
+    width: 320px;
+    max-width: 90vw;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transform: translateY(-10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.painel-info-topo.aberto {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.painel-info-topo-linha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.painel-info-topo-botoes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.painel-info-topo-botoes .btn-red { width: 100%; }
+@media (max-width: 520px) {
+    .painel-info-topo { right: 8px; left: 8px; width: auto; max-width: none; }
+}
+
+/* ---------- Corpo: calendário lateral + conteúdo ---------- */
+.app-body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 16px;
+    align-items: start;
+}
+.conteudo-principal {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.calendario-lateral {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: sticky;
+    top: calc(var(--topbar-h, 90px) + 20px);
+}
+.calendario-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.calendario-label {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+}
+.calendario-valor {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    color: var(--neon-lime);
+}
+#calendario-edicao-mestre { margin-top: 6px; display: flex; flex-direction: column; gap: 10px; }
+#calendario-edicao-mestre button { width: 100%; }
+
+@media (max-width: 900px) {
+    .app-body { grid-template-columns: 1fr; }
+    .calendario-lateral { position: static; }
+}
+
+/* ---------- Aviso de criação pendente ---------- */
+.aviso-criacao {
+    padding: 18px 22px;
+    border-color: var(--neon-red);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.aviso-criacao p { font-size: 0.82rem; color: var(--text-dim); }
+.aviso-criacao button { align-self: flex-start; }
+
+/* ---------- Abas: categoria (grupo) + sub-aba ---------- */
+
+/* Botão "Tela dividida", sozinho numa fileira acima da navegação. */
+.paineis-controles {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 6px;
+}
+.tabs-controle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    padding: 6px 10px;
+}
+.tabs-controle-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-main); box-shadow: none; }
+.tabs-controle-btn.ativo {
+    border-color: var(--neon-lime);
+    color: var(--neon-lime);
+    background: rgba(163, 230, 53, 0.08);
+}
+
+/* Área que contém o(s) slot(s) de painel. Fora do modo split é só uma
+   coluna normal (altura de conteúdo); com split ligado (.split-ativo)
+   vira duas metades empilhadas, cada uma com scroll próprio. */
+.paineis-area { display: block; }
+.paineis-area.split-ativo {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 220px);
+    min-height: 480px;
+    gap: 10px;
+}
+.painel-slot { display: flex; flex-direction: column; min-width: 0; }
+.paineis-area.split-ativo .painel-slot {
+    flex: 1 1 50%;
+    min-height: 0;
+    overflow-y: auto;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+}
+.paineis-area.split-ativo .painel-slot .tabs-nav-bloco { position: sticky; top: 0; z-index: 5; }
+
+/* Bloco de navegação (categoria + sub-abas) de um slot. */
+.tabs-nav-bloco {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+}
+.categorias-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.categoria-btn {
+    border: none;
+    background: rgba(255,255,255,0.04);
+    color: var(--text-dim);
+    border-radius: 3px;
+    padding: 9px 16px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-size: 0.78rem;
+}
+.categoria-btn:hover { background: rgba(255,255,255,0.08); box-shadow: none; color: var(--text-main); }
+.categoria-btn.active {
+    background: var(--neon-lime);
+    color: #000;
+    box-shadow: 0 0 10px rgba(163, 230, 53, 0.4);
+}
+.tabs-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding-left: 2px;
+}
+.tab-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    border-radius: 2px;
+}
+.tab-btn:hover { background: rgba(255,255,255,0.06); box-shadow: none; color: var(--text-main); }
+.tab-btn.active {
+    background: var(--neon-purple);
+    color: #fff;
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+}
+/* Aba já aberta na OUTRA metade da tela (modo split) — não pode ser
+   escolhida de novo aqui (ver montarNavegacaoAbas em ficha.js). */
+.tab-btn.indisponivel-na-outra-metade { opacity: 0.35; cursor: not-allowed; }
+.tab-btn.indisponivel-na-outra-metade:hover { background: transparent; color: var(--text-dim); }
+/* Fora da categoria atualmente selecionada nesse slot, ou escondida
+   porque o Mestre está atuando como NPC (ver abrirAba/
+   aplicarVisibilidadeAbasNpc em ficha.js). Duas classes independentes
+   que só escondem — nunca reaparecem uma por cima da outra. */
+.tab-btn.categoria-oculta,
+.tab-btn.npc-oculta { display: none; }
+
+@media (max-width: 600px) {
+    .categoria-btn { padding: 8px 12px; font-size: 0.7rem; }
+}
+
+.tab-panel { display: none; padding: 26px; flex-direction: column; gap: 4px; }
+.tab-panel.active { display: flex; }
+.tab-panels { display: block; }
+
+.entity-list li.locked-visual { opacity: 0.6; cursor: not-allowed; }
+.entity-list li.locked-visual:hover { background: rgba(255, 255, 255, 0.03); }
+
+/* ---------- Formulários genéricos ---------- */
+.grid-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 8px;
+}
+.grid-form.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-form.grid-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 600px) {
+    .grid-form.grid-3, .grid-form.grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+.campo { display: flex; flex-direction: column; }
+.campo.largo { grid-column: span 2; }
+.campo.curto { max-width: 110px; }
+
+.hint-inline {
+    color: var(--text-dim);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.68rem;
+    font-weight: 400;
+}
+
+.hint-inline.hint-alerta {
+    display: block;
+    color: #ffb020;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* ---------- Dark Net (uma caixa por site do manual) ---------- */
+.darknet-credencial-adicionar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+.darknet-credencial-adicionar select {
+    min-width: 160px;
+}
+.darknet-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+/* Poço dos sites abertos (no máx. 2) — empilhados, largura toda,
+   cresce pra baixo; a página rola se tiver muito conteúdo. */
+.darknet-abertos {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.darknet-abertos:empty { display: none; }
+/* Poço dos sites minimizados — só o nome, lado a lado, sem ocupar
+   espaço; quebra linha quando não cabem mais. Grid (não flex) de
+   propósito: cada "pill" vira uma coluna do MESMO tamanho, senão o
+   nome mais curto (Dm) fica minúsculo e o mais longo (BlackPrint/
+   RabbitHole) fica bem maior que os outros. */
+.darknet-minimizados {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+}
+.darknet-site {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+}
+.darknet-site--expandido {
+    padding: 14px;
+    width: 100%;
+}
+/* Minimizado: só a "pill" do nome fica visível — o resto do conteúdo
+   (link/acesso, lista de credenciais) some sem ocupar espaço. */
+.darknet-site--minimizado {
+    padding: 0;
+    border-color: rgba(255, 255, 255, 0.05);
+}
+.darknet-site--minimizado > *:not(.darknet-site-header) { display: none; }
+.darknet-site-header {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--neon-lime);
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+}
+.darknet-site--minimizado .darknet-site-header {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.darknet-site--minimizado .darknet-site-header:hover {
+    background: rgba(190, 255, 60, 0.08);
+    border-color: rgba(190, 255, 60, 0.3);
+}
+.darknet-site--expandido .darknet-site-header {
+    padding: 0 0 4px;
+}
+.darknet-site--expandido .darknet-site-header:hover {
+    background: none;
+    box-shadow: none;
+    color: white;
+}
+.darknet-site--expandido .darknet-site-header::after {
+    content: " ▲";
+    font-size: 0.7em;
+    opacity: 0.7;
+}
+.darknet-site--minimizado .darknet-site-header::after {
+    content: " ▾";
+    font-size: 0.7em;
+    opacity: 0.5;
+}
+.darknet-credenciais-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.darknet-credencial-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.darknet-credencial-item input {
+    flex: 1;
+}
+.darknet-credencial-remover {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.darknet-credenciais-vazio {
+    font-style: italic;
+}
+.darknet-credencial-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.015);
+}
+.darknet-credencial-card-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.darknet-credencial-card-header input {
+    flex: 1;
+    min-width: 0;
+}
+.darknet-credencial-badge-mod {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.darknet-credencial-btn {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.darknet-credencial-corpo {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 4px 2px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+.darknet-credencial-corpo.aberto {
+    display: flex;
+}
+.darknet-credencial-resumo {
+    font-size: 0.74rem;
+    color: var(--text-dim);
+}
+.darknet-credencial-pontuacao-linha {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    color: var(--text-dim);
+}
+.darknet-credencial-pontuacao-input {
+    width: 70px;
+    flex-shrink: 0;
+}
+.darknet-avaliacoes-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.darknet-avaliacoes-vazio {
+    font-size: 0.74rem;
+}
+.darknet-avaliacao-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.02);
+}
+.darknet-avaliacao-linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+.darknet-avaliacao-remover {
+    padding: 1px 6px;
+    font-size: 0.68rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.darknet-avaliacao-estrelas {
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+.darknet-avaliacao-estrelas.positiva { color: var(--neon-lime); }
+.darknet-avaliacao-estrelas.negativa { color: var(--neon-red); }
+.darknet-avaliacao-texto {
+    font-size: 0.78rem;
+    color: var(--text-main);
+    white-space: pre-wrap;
+}
+.darknet-avaliacao-rodape {
+    font-size: 0.68rem;
+}
+.darknet-form-avaliacao {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+.darknet-form-avaliacao-linha {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    color: var(--text-dim);
+}
+.darknet-form-avaliacao textarea {
+    font-size: 0.78rem;
+    resize: vertical;
+}
+.darknet-form-avaliacao button {
+    align-self: flex-start;
+    font-size: 0.72rem;
+    padding: 4px 10px;
+}
+
+/* ---------- Dm: contatos salvos ---------- */
+.darknet-contatos-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.darknet-contatos-vazio {
+    font-size: 0.74rem;
+}
+.darknet-contato-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.darknet-contato-numero {
+    flex: 1;
+    min-width: 0;
+}
+.darknet-contato-nome {
+    flex: 1;
+    min-width: 0;
+}
+.darknet-contato-remover {
+    padding: 1px 6px;
+    font-size: 0.68rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.darknet-form-contato {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+.darknet-form-contato input:first-child {
+    flex: 1;
+    min-width: 0;
+}
+.darknet-form-contato input:nth-child(2) {
+    flex: 1;
+    min-width: 0;
+}
+.darknet-form-contato button {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    padding: 4px 10px;
+}
+
+/* ---------- Void: stats de seguidores/posts/seguindo ---------- */
+.darknet-stats-grid {
+    display: flex;
+    gap: 10px;
+}
+.darknet-stat-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    /* Largura fixa igual pras 3 caixas (Seguidores/Posts/Seguindo) —
+       sem isso, cada uma só tinha a largura do próprio texto do
+       rótulo, e "Seguidores"/"Seguindo" (rótulo mais longo) ficavam
+       bem mais largas que "Posts". */
+    width: 92px;
+    flex-shrink: 0;
+}
+.darknet-stat-campo input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ---------- Creators/BlackPrint: itens à venda + sorteio ---------- */
+.darknet-itens-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+.darknet-itens-titulo {
+    font-size: 0.72rem;
+}
+.darknet-itens-vazio {
+    font-size: 0.74rem;
+}
+.darknet-item-venda {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.darknet-item-venda-nome {
+    flex: 1;
+    min-width: 0;
+}
+.darknet-item-venda-valor {
+    width: 80px;
+    flex-shrink: 0;
+}
+.darknet-item-venda-tipo {
+    width: 110px;
+    flex-shrink: 0;
+    font-size: 0.72rem;
+}
+.darknet-item-venda-remover {
+    padding: 1px 6px;
+    font-size: 0.68rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.darknet-form-item-venda {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+.darknet-form-item-venda input:first-child {
+    flex: 1;
+    min-width: 0;
+}
+.darknet-form-item-venda input:nth-child(2) {
+    width: 80px;
+    flex-shrink: 0;
+}
+.darknet-form-item-venda select {
+    width: 110px;
+    flex-shrink: 0;
+    font-size: 0.72rem;
+}
+.darknet-form-item-venda button {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    padding: 4px 10px;
+}
+
+/* ---------- Determinações (caixas de texto por slot, liberadas por Nível) ---------- */
+.determinacoes-rolagem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.determinacoes-rolagem .btn-ghost {
+    padding: 4px 10px;
+    font-size: 0.72rem;
+}
+.determinacoes-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+    max-height: 480px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    padding-right: 6px;
+}
+.determinacao-item { display: flex; flex-direction: column; gap: 4px; scroll-margin-top: 12px; }
+.determinacao-item label {
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+.determinacao-item textarea { min-height: 64px; }
+/* Slot preenchido antes de uma queda de Nível: mantém o texto salvo
+   visível (nunca é apagado sozinho), mas sinaliza visualmente que ele
+   está acima do limite atual do personagem. */
+.determinacao-item.determinacao-excedente label { color: var(--neon-gold); }
+.determinacao-item.determinacao-excedente textarea { border-color: rgba(250, 204, 21, 0.4); }
+
+/* Selo de status (aguardando validação / validada) e botões de ação de
+   cada Determinação — ver renderizarDeterminacoes em ficha.js. */
+.determinacao-status {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    text-transform: none;
+    letter-spacing: 0;
+    padding: 1px 7px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+.determinacao-status.status-aguardando {
+    color: var(--neon-gold);
+    background: rgba(250, 204, 21, 0.12);
+    border: 1px solid rgba(250, 204, 21, 0.4);
+}
+.determinacao-status.status-validada {
+    color: var(--neon-lime, #a3e635);
+    background: rgba(163, 230, 53, 0.12);
+    border: 1px solid rgba(163, 230, 53, 0.4);
+}
+.determinacao-item.determinacao-validada textarea { opacity: 0.75; }
+.determinacao-acoes { display: flex; justify-content: flex-end; }
+.determinacao-acoes .btn-lime, .determinacao-acoes .btn-ghost {
+    padding: 3px 10px;
+    font-size: 0.68rem;
+}
+
+.checkbox-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.8rem;
+    color: var(--text-main);
+    cursor: pointer;
+    font-weight: 400;
+}
+.checkbox-inline input[type="checkbox"] {
+    width: auto;
+}
+.radio-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.8rem;
+    color: var(--text-main);
+    cursor: pointer;
+    font-weight: 400;
+}
+.radio-inline input[type="radio"] {
+    width: auto;
+}
+.recuperacao-pv-modo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin: 8px 0;
+}
+.recuperacao-pv-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 4px 0 8px;
+    padding-left: 4px;
+}
+
+/* ---------- Atributos / recursos (grid em cartão) ---------- */
+.grid-atributos, .grid-recursos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.attr-card {
+    background: #000;
+    border: var(--border-style);
+    border-left: 3px solid var(--neon-purple);
+    padding: 10px 14px;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.attr-card label {
+    margin-bottom: 0;
+    color: var(--text-main);
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+}
+.attr-acoes {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.btn-rolar {
+    padding: 6px 9px;
+    font-size: 0.85rem;
+    line-height: 1;
+    border-color: rgba(14, 165, 233, 0.4);
+}
+.entity-list .btn-rolar {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    padding: 5px 9px;
+}
+.attr-card input[type="number"] {
+    width: 64px;
+    text-align: center;
+    padding: 6px;
+}
+.attr-card.calculado {
+    border-left-color: var(--neon-lime);
+    cursor: help;
+}
+.attr-card.calculado .attr-valor {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--neon-lime);
+    font-size: 1.1rem;
+    min-width: 40px;
+    text-align: center;
+}
+.attr-card.recurso { border-left-color: var(--neon-blue); }
+.attr-card.recurso .attr-valor-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+}
+.attr-card.recurso input[type="number"] { width: 56px; }
+.attr-card.recurso .max-label { color: var(--text-dim); font-size: 0.78rem; }
+
+/* Estado de saúde (Machucado / Muito Machucado) — badge de aviso logo
+   abaixo dos recursos vitais, só aparece quando o PV atual cruza um dos
+   limiares (ver calcularEstadoSaude em regras.js). */
+.estado-saude-badge {
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 2px;
+    border: 1px dashed rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.08);
+    color: var(--neon-red);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    text-shadow: 0 0 6px rgba(239, 68, 68, 0.35);
+}
+.estado-saude-badge strong {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.estado-saude-badge.muito-machucado {
+    border-color: var(--neon-red);
+    background: rgba(239, 68, 68, 0.16);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+}
+
+/* Estado de Energia (Energia Baixa / Energia Crítica / Morte) — mesmo
+   badge de aviso do estado de saúde acima, mas em azul (cor de Energia
+   no resto da ficha); ver calcularEstadoEnergia em regras.js. Fica
+   sempre um pouco abaixo do badge de saúde (ver margin-top). */
+.estado-energia-badge {
+    margin-top: 8px;
+    border-color: rgba(14, 165, 233, 0.5);
+    background: rgba(14, 165, 233, 0.08);
+    color: var(--neon-blue);
+    text-shadow: 0 0 6px rgba(14, 165, 233, 0.35);
+}
+.estado-energia-badge.energia-critica {
+    border-color: var(--neon-blue);
+    background: rgba(14, 165, 233, 0.16);
+    box-shadow: 0 0 12px rgba(14, 165, 233, 0.25);
+}
+.estado-energia-badge.morte {
+    border-color: var(--neon-red);
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--neon-red);
+    text-shadow: 0 0 6px rgba(239, 68, 68, 0.35);
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.35);
+}
+.attr-card.locked { opacity: 0.6; }
+.attr-card.locked input { pointer-events: none; opacity: 0.7; }
+#linha-esteroides.locked { opacity: 0.6; }
+
+/* ---------- Listas de entidade (perícias, itens, vantagens...) ---------- */
+.entity-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+.entity-list li {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-left: 3px solid var(--neon-purple);
+    border-radius: 2px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+.entity-list li:hover { background: rgba(255, 255, 255, 0.06); }
+.entity-list li.entity-list-subheader {
+    background: none;
+    border: none;
+    padding: 4px 2px 2px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    cursor: default;
+}
+.entity-list li.entity-list-subheader:hover { background: none; }
+/* Miniatura do item no inventário (só aparece quando o item tem
+   imagem cadastrada — ver campo "imagem" e criarLiItem em ficha.js). */
+/* Prévia flutuante da imagem do item ao passar o mouse (ver
+   ativarPreviewFlutuanteImagem em ficha.js) — segue o cursor, fica por
+   cima de tudo e não intercepta clique/hover (pointer-events: none),
+   senão ela mesma bloquearia o mouseleave do item logo abaixo dela. */
+.preview-flutuante-imagem-item {
+    display: none;
+    position: fixed;
+    z-index: 3000;
+    max-width: 220px;
+    max-height: 220px;
+    object-fit: contain;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    background: rgba(20,20,20,0.9);
+    pointer-events: none;
+}
+.entity-list .entity-thumb {
+    width: 45px;
+    height: 45px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+}
+@media (hover: hover) {
+    .entity-list .entity-thumb { cursor: zoom-in; }
+}
+.entity-list .entity-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+    /* Base mínima de espaço garantida pro nome/detalhes do item — sem
+       isso, quando `.entity-badges` tinha muitos botões (ex: arma com
+       Recarregar + Retirar carregador + Usar...), o flexbox espremia
+       este bloco até 0px de largura (efeito colateral de overflow:hidden
+       no cálculo de "min-width: auto" do flexbox) e o nome/infos do
+       item sumiam por completo, sobrando só os botões. */
+    flex: 1 1 200px;
+    min-width: 160px;
+}
+.entity-list .entity-nome {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* Descrição/detalhes do item: fica escondida por padrão e só aparece
+   ao passar o mouse em cima do item (ou focar nele via teclado), pra
+   não ocupar espaço permanente no card — especialmente importante no
+   celular, onde cada linha extra custa caro. */
+.entity-list .entity-sub {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.15s ease, opacity 0.15s ease;
+}
+.entity-list li:hover .entity-sub,
+.entity-list li:focus-within .entity-sub,
+.entity-list li.entity-sub-fixa .entity-sub {
+    max-height: 120px;
+    opacity: 1;
+}
+/* Em telas touch (celular/tablet) não existe hover de verdade — e tocar
+   no item já abre o modal de edição antes de dar tempo de "passar o
+   mouse". Sem isso, o texto acima nunca aparecia pra quem usa o site
+   pelo celular. Aqui ele fica sempre visível nesses dispositivos,
+   voltando a ser a exceção (só desktop com mouse) que era a intenção
+   original do hover. */
+@media (hover: none) {
+    .entity-list .entity-sub {
+        max-height: 120px;
+        opacity: 1;
+    }
+}
+.entity-list .entity-badges {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-width: 0;
+    max-width: 100%;
+}
+/* Botões, pills e selects dentro do card do item: sem isso, um <select>
+   com texto de opção longo (ex: nome de um recipiente) recusa a
+   encolher (min-width:auto é o padrão em item flex) e vaza pra fora da
+   caixa do item no celular, em vez de quebrar linha ou truncar. */
+.entity-list .entity-badges > * {
+    min-width: 0;
+    max-width: 100%;
+}
+.entity-list .entity-badges select {
+    text-overflow: ellipsis;
+}
+/* Em telas estreitas, distribui os botões/selects em grade dentro da
+   própria caixa do item, em vez de deixá-los soltos alinhados à
+   direita (onde acabavam vazando pra fora). Selects ocupam a largura
+   toda (linha própria); botões e pills se distribuem em colunas. */
+@media (max-width: 600px) {
+    .entity-list .entity-badges {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+        justify-content: stretch;
+        justify-items: stretch;
+        width: 100%;
+        gap: 6px;
+    }
+    .entity-list .entity-badges > * {
+        width: 100%;
+        text-align: center;
+    }
+    .entity-list .entity-badges select,
+    .entity-list .entity-badges .select-guardar-dentro,
+    .entity-list .entity-badges .select-transferir {
+        grid-column: 1 / -1;
+        text-align: left;
+    }
+}
+
+/* Checkboxes de "Ocasião Especial" numa perícia (modificador situacional
+   de especialização/vantagem/item que só conta quando marcado — ver
+   modificadoresOcasionaisDaPericia em regras.js). Fica numa linha à
+   parte, abaixo do nome/badges da perícia, sempre visível (diferente de
+   .entity-sub) porque o jogador precisa vê-la ANTES de rolar. */
+.pericia-ocasionais {
+    flex: 1 1 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dashed rgba(255,255,255,0.12);
+}
+.pericia-ocasional-item {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    gap: 5px;
+}
+.pericia-ocasional-item:has(input:checked) {
+    color: var(--neon-lime);
+}
+
+.mod-ocasional-label {
+    font-size: 0.72rem;
+    white-space: nowrap;
+}
+
+.mod-pill {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    padding: 3px 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text-dim);
+    white-space: nowrap;
+}
+.mod-pill.positivo { border-color: var(--neon-lime); color: var(--neon-lime); }
+.mod-pill.negativo { border-color: var(--neon-red); color: var(--neon-red); }
+.mod-pill.tag { border-color: var(--neon-blue); color: var(--neon-blue); }
+.entity-list .total-rolagem {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--neon-lime);
+    font-size: 0.95rem;
+    min-width: 30px;
+    text-align: center;
+}
+.btn-toggle-ativo {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    padding: 3px 9px;
+    border-radius: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    background: transparent;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.btn-toggle-ativo.ligado {
+    border: 1px solid var(--neon-lime);
+    color: var(--neon-lime);
+}
+.btn-toggle-ativo.ligado:hover { background: rgba(163, 255, 18, 0.12); }
+.btn-toggle-ativo.desligado {
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--text-dim);
+}
+.btn-toggle-ativo.desligado:hover { background: rgba(255,255,255,0.06); }
+.btn-toggle-equipada {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    padding: 3px 9px;
+    border-radius: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    background: transparent;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.btn-toggle-equipada.ligado {
+    border: 1px solid var(--neon-lime);
+    color: var(--neon-lime);
+}
+.btn-toggle-equipada.ligado:hover { background: rgba(163, 255, 18, 0.12); }
+.btn-toggle-equipada.desligado {
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--text-dim);
+}
+.btn-toggle-equipada.desligado:hover { background: rgba(255,255,255,0.06); }
+.btn-toggle-equipada:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Recipientes de inventário (ex: mochila) e itens guardados dentro
+   deles — ver criarLiItem/renderizarInventario em ficha.js. */
+.btn-toggle-container {
+    background: transparent;
+    border: none;
+    color: var(--neon-blue);
+    cursor: pointer;
+    font-size: 1.3rem;
+    padding: 4px 8px;
+    line-height: 1;
+    vertical-align: middle;
+    min-width: 32px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-toggle-container:hover { color: var(--neon-lime); }
+.entity-list-nested {
+    margin: 8px 0 0 18px !important;
+    padding-left: 14px;
+    border-left: 2px dashed rgba(255,255,255,0.12);
+}
+.entity-list li.entity-item-aninhado {
+    background: rgba(255, 255, 255, 0.02);
+    border-left-color: var(--neon-blue);
+}
+select.select-guardar-dentro {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+}
+
+.entity-list li.entidade-desativada { border-left-color: rgba(255,255,255,0.15); opacity: 0.6; }
+.entity-list li.entidade-desativada .entity-nome { color: var(--text-dim); }
+.entity-list li.entidade-desativada:hover { opacity: 0.85; }
+.entity-list li.receita-slot-vazio,
+.entity-list li.receita-extra-form {
+    flex-direction: column;
+    align-items: stretch;
+    cursor: default;
+    gap: 8px;
+    border-left-color: var(--neon-lime, var(--neon-purple));
+}
+.entity-list li.receita-slot-vazio:hover,
+.entity-list li.receita-extra-form:hover { background: rgba(255, 255, 255, 0.03); }
+.entity-list li.receita-slot-vazio label,
+.entity-list li.receita-extra-form label {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+}
+.entity-list li.receita-slot-vazio select,
+.entity-list li.receita-extra-form select {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    padding: 6px 8px;
+    color: inherit;
+}
+.receita-ingrediente-linha {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+}
+.receita-ingrediente-linha select {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    padding: 6px 8px;
+    color: inherit;
+}
+.receita-ingrediente-linha input[type="number"] {
+    width: 64px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    padding: 6px 8px;
+    color: inherit;
+}
+.receita-ingrediente-linha .btn-red {
+    padding: 4px 10px;
+    line-height: 1;
+}
+.receita-ingrediente-linha.material-escolha-linha {
+    flex-direction: column;
+    align-items: stretch;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    padding: 8px 10px;
+}
+.material-escolha-linha select {
+    width: 100%;
+}
+.entity-list-empty {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    font-style: italic;
+    padding: 8px 2px 14px;
+}
+.entity-list.manobras-list li { cursor: default; }
+.entity-list.manobras-list li:hover { background: rgba(255, 255, 255, 0.03); }
+
+#badge-pendentes {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    margin-left: 6px;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--neon-red);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.pendente-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.06);
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+.pendente-card .pendente-botoes {
+    display: flex;
+    gap: 8px;
+}
+.pendente-card .pendente-botoes button {
+    flex: 1;
+}
+
+/* ---------- Ações Pendentes: ícone lateral + gaveta flutuante ----------
+   Lugar próprio pro Mestre, fora do Painel do Mestre: uma aba fixa
+   grudada na borda esquerda da tela que, ao ser clicada, desliza uma
+   caixa flutuante com a fila de pendentes — sem escurecer nem bloquear
+   o resto da ficha por trás, ao contrário dos modais de tela cheia. */
+.pendentes-lateral-btn {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    z-index: 5001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 58px;
+    border: 1px solid var(--neon-red);
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    background: var(--panel-bg);
+    color: var(--neon-red);
+    font-size: 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 0 18px rgba(239, 68, 68, 0.25);
+    transition: left 0.25s ease, background 0.15s ease;
+}
+.pendentes-lateral-btn:hover { background: rgba(239, 68, 68, 0.12); }
+.pendentes-lateral-btn.aberto { left: 320px; }
+.pendentes-lateral-icone { width: 22px; height: 22px; }
+.badge-pendentes-lateral {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--neon-red);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+.drawer-pendentes {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 320px;
+    max-width: 86vw;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    background: var(--panel-bg);
+    border-right: 1px solid var(--neon-red);
+    z-index: 5000;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    overflow-y: auto;
+}
+.drawer-pendentes.aberto { transform: translateX(0); box-shadow: 0 0 40px rgba(239, 68, 68, 0.25); }
+
+/* Metade de cima da gaveta: o próprio Painel do Mestre embutido (grade
+   de ações + corpo de conteúdo), não mais um botão que abre um painel à
+   parte. Não tem altura fixa — o bloco só ocupa o espaço que o conteúdo
+   precisa (flex-shrink: 0); #mestre-corpo tem seu próprio scroll interno
+   (max-height: 60vh, ver ficha.css mais abaixo), então não engole a
+   gaveta inteira mesmo com muito conteúdo. */
+.drawer-pendentes-secao-mestre {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+    padding-bottom: 14px;
+    border-bottom: var(--border-style);
+}
+.drawer-pendentes-secao-mestre h4 {
+    color: var(--neon-red);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.95rem;
+}
+/* Cabeçalho que aparece só quando alguma ação do Mestre está aberta
+   (Biblioteca de Itens, NPCs etc.) — o "×" limpa #mestre-corpo na hora,
+   sem precisar rolar a gaveta inteira até achar Ações Pendentes lá
+   embaixo quando o conteúdo aberto é grande (ver abrirAcaoMestre e o
+   listener de #mestre-corpo-fechar em ficha.js). */
+.mestre-corpo-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2px;
+}
+.mestre-corpo-topo span {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Metade de baixo: Ações Pendentes. Sobe pra ocupar o resto da gaveta
+   assim que a seção do Mestre termina (flex: 1), em vez de ficar
+   centralizada no meio da caixa deslizante. */
+.drawer-pendentes-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: var(--border-style);
+}
+.drawer-pendentes-topo h4 {
+    color: var(--neon-red);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.95rem;
+}
+.drawer-pendentes-corpo {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+}
+@media (max-width: 520px) {
+    .pendentes-lateral-btn.aberto { left: 86vw; }
+}
+
+/* ---------- Gerenciador de Combate: painel encostado na direita ----------
+   Mesma ideia da gaveta de Ações Pendentes, mas do lado oposto e mais
+   largo (o conteúdo interno já tem duas colunas — ver montarGerenciador
+   Combate em ficha.js). Sem backdrop: a ficha continua visível e clicável
+   à esquerda enquanto o painel está aberto. */
+.drawer-combate {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 640px;
+    max-width: 94vw;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    background: var(--panel-bg);
+    border-left: 1px solid var(--neon-red);
+    z-index: 5000;
+    transform: translateX(100%);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    overflow-y: auto;
+}
+.drawer-combate.active { transform: translateX(0); box-shadow: 0 0 40px rgba(239, 68, 68, 0.25); }
+.drawer-combate-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: var(--border-style);
+}
+.drawer-combate-topo h4 {
+    color: var(--neon-red);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.95rem;
+}
+.drawer-combate-corpo {
+    display: flex;
+    flex-direction: column;
+    overflow-y: visible;
+}
+
+/* ---------- Painel do Mestre ----------
+   Não é mais um painel à parte encostado na direita: agora mora embutido
+   dentro da própria gaveta de Ações Pendentes (.drawer-pendentes-secao-
+   mestre), então herda o scroll/posicionamento dela. .drawer-mestre-corpo
+   continua existindo só como classe de estilo pro miolo (#mestre-corpo). */
+.drawer-mestre-corpo {
+    display: flex;
+    flex-direction: column;
+    overflow-y: visible;
+}
+.reducao-dano-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.reducao-dano-linha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.reducao-dano-linha label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 0;
+    text-transform: none;
+    color: var(--text-main);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    letter-spacing: 0;
+    flex: 1;
+}
+.reducao-dano-linha input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--neon-purple);
+}
+.reducao-dano-linha input[type="number"] {
+    width: 90px;
+}
+.manobra-pericias-linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+}
+.btn-pericia-golpe {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    padding: 3px 8px;
+    border-color: rgba(14, 165, 233, 0.4);
+    color: var(--neon-blue);
+    text-transform: none;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+}
+.btn-pericia-golpe:hover {
+    background: var(--neon-blue);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(14, 165, 233, 0.4);
+}
+.manobra-pericia-texto {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+}
+
+/* ---------- Inventário: categorias ---------- */
+.inventario-categorias {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 6px 0 10px;
+}
+.inventario-categoria-btn {
+    border: 1px solid rgba(255,255,255,0.15);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.68rem;
+    padding: 7px 12px;
+}
+.inventario-categoria-btn.active {
+    border-color: var(--neon-blue);
+    color: var(--neon-blue);
+    background: rgba(14, 165, 233, 0.08);
+}
+.inventario-categoria-chip {
+    display: inline-flex;
+}
+.inventario-categoria-chip .inventario-categoria-btn {
+    border-radius: 4px 0 0 4px;
+}
+.inventario-categoria-excluir {
+    border: 1px solid rgba(255,255,255,0.15);
+    border-left: none;
+    border-radius: 0 4px 4px 0;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    line-height: 1;
+    padding: 7px 9px;
+    cursor: pointer;
+}
+.inventario-categoria-excluir:hover {
+    color: #f87171;
+    border-color: #f87171;
+}
+/* ---------- Registro de Sessões ---------- */
+.sessoes-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.sessoes-form {
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px 0 16px;
+    padding: 12px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+}
+.registro-sessao-card {
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+.registro-sessao-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+}
+.registro-sessao-card-header:hover {
+    background: rgba(255,255,255,0.04);
+}
+.registro-sessao-titulo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.registro-sessao-periodo {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+}
+.registro-sessao-corpo {
+    display: none;
+    padding: 0 12px 12px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+.registro-sessao-corpo.aberto {
+    display: block;
+}
+.registro-sessao-descricao {
+    white-space: pre-wrap;
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    margin: 10px 0;
+}
+.registro-sessao-acoes {
+    display: flex;
+    gap: 8px;
+}
+/* ---------- Finanças: saldos ---------- */
+.saldo-campo-linha {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.saldo-campo-linha input {
+    flex: 1;
+}
+.btn-saldo-excluir {
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    line-height: 1;
+    padding: 8px 9px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.btn-saldo-excluir:hover {
+    color: #f87171;
+    border-color: #f87171;
+}
+.categoria-bloco { margin-bottom: 18px; }
+.categoria-bloco-titulo {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: var(--neon-blue);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.categoria-bloco-titulo .peso-total { color: var(--text-dim); font-weight: 400; text-transform: none; letter-spacing: 0; }
+.btn-transferir {
+    font-size: 0.62rem;
+    padding: 5px 8px;
+    border-color: rgba(255,255,255,0.2);
+    color: var(--text-dim);
+}
+.btn-transferir:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.btn-usar-item {
+    font-size: 0.62rem;
+    padding: 5px 10px;
+}
+.btn-usar-item:disabled { opacity: 0.25; }
+
+/* ---------- Veículos ----------
+   Card por veículo (fase 4 do plano de implementação): cabeçalho com
+   nome/tipo/manutenção + grid com os 5 atributos, cada um mostrando o
+   nível e as linhas de efeito já calculadas (ver
+   calcularModificadoresVeiculo em regras.js). Somente leitura pro
+   jogador — criar/editar fica pro formulário do Mestre (fase 5). */
+.veiculo-card {
+    background: #000;
+    border: var(--border-style);
+    border-left: 3px solid var(--neon-gold);
+    border-radius: 2px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+}
+.veiculo-card.editavel { cursor: pointer; }
+.veiculo-card.editavel:hover { background: rgba(255, 255, 255, 0.04); }
+.veiculo-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+}
+.veiculo-nome {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    color: var(--text-main);
+    margin-right: 8px;
+}
+.veiculo-tipo {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.veiculo-manutencao { text-align: right; }
+.veiculo-manutencao-valor {
+    display: block;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--neon-gold);
+    font-size: 1rem;
+}
+.veiculo-atributos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
+}
+.veiculo-atributo-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    padding: 8px 10px;
+}
+.veiculo-atributo-label {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+.veiculo-atributo-nivel {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--neon-lime);
+}
+.veiculo-atributo-linha {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+}
+.veiculo-manutencao-pedido {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+.veiculo-manutencao-origem {
+    flex: 1;
+    min-width: 140px;
+}
+.veiculo-manutencao-btn {
+    font-size: 0.78rem;
+    padding: 7px 12px;
+}
+
+/* Trava do veículo (adendo "chave" ao plano de veículos): botão de
+   destrancar/trancar do jogador (some pro Mestre, que mexe em
+   `trancado` direto no modal) + selo de estado só-leitura no header
+   pro Mestre acompanhar sem precisar abrir o modal. */
+.veiculo-tranca-btn {
+    font-size: 0.78rem;
+    padding: 7px 12px;
+    margin-top: 12px;
+}
+.veiculo-tranca-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.veiculo-tranca-estado {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+}
+
+/* ---------- Vida do veículo (Fase 2 — ver plano-veiculos-fase2.txt):
+   barra de PV, badge de deterioração e campo de dano manual do Mestre.
+   Mesmo espírito visual da .volume-bar-* (recipientes), só com classes
+   próprias pra não herdar padding/gap pensado pra outro contexto. ---------- */
+.veiculo-pv-wrap {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.veiculo-pv-texto {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+}
+.veiculo-pv-texto-critica {
+    color: var(--neon-red);
+    font-weight: 600;
+}
+.veiculo-pv-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.veiculo-pv-fill {
+    height: 100%;
+    background: var(--neon-gold);
+    transition: width 0.35s ease, background-color 0.35s ease;
+}
+.veiculo-pv-fill-critica {
+    background: var(--neon-red);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.65);
+}
+.veiculo-deterioracao-badge {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 8px;
+    font-size: 0.72rem;
+    white-space: normal;
+}
+.veiculo-dano-manual {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+.veiculo-dano-input {
+    width: 90px;
+}
+.veiculo-dano-atributo {
+    flex: 1;
+    min-width: 140px;
+}
+.veiculo-dano-btn {
+    font-size: 0.78rem;
+    padding: 7px 12px;
+}
+#btn-repor-chave-veiculo {
+    margin-left: 10px;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+}
+
+/* ---------- Reparo e Upgrade de atributo (Fase 3 — ver
+   plano-veiculos-fase2.txt): botões "Melhorar"/"Reparar" dentro de
+   cada bloco de atributo do card de veículo. ---------- */
+.veiculo-atributo-acoes {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+}
+.veiculo-mecanico-btn {
+    font-size: 0.68rem;
+    padding: 4px 8px;
+    flex: 1;
+    min-width: 90px;
+}
+.veiculo-mecanico-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+.material-falta {
+    color: var(--neon-red);
+}
+/* modal-mecanico-veiculo-terceiro (Fase 6 — ver plano-veiculos-fase2.txt,
+   seção "FASE 6"): mesmo modal de mecânico da Fase 3, variante pra
+   veículo de outro dono — reaproveita o mesmo estilo de .modal-campo. */
+#modal-mecanico-veiculo .modal-campo,
+#modal-mecanico-veiculo-terceiro .modal-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+}
+.veiculo-manobra-btn {
+    font-size: 0.78rem;
+    padding: 7px 12px;
+}
+.veiculo-bonus-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.veiculo-bonus-limpar-btn {
+    font-size: 0.68rem;
+    padding: 3px 8px;
+}
+
+/* ---------- Manobras de veículo (Fase 4 — ver
+   plano-veiculos-fase2.txt, seção "FASE 4"). ---------- */
+.veiculo-manobra-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+.veiculo-manobra-linha {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 3px solid var(--neon-lime);
+    border-radius: 2px;
+    padding: 10px 12px;
+}
+.veiculo-manobra-linha.desabilitada {
+    border-left-color: rgba(255, 255, 255, 0.2);
+    opacity: 0.65;
+}
+.veiculo-manobra-linha-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.veiculo-manobra-linha-acoes {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+.veiculo-manobra-dificuldade-input {
+    width: 200px;
+}
+.veiculo-manobra-rolar-btn {
+    font-size: 0.78rem;
+    padding: 6px 12px;
+}
+.veiculo-manobra-rolar-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* ---------- Acessórios de veículo (Fase 5b — ver
+   plano-acessorios-veiculo.txt, seção "FASE 5b"): seção "Acessórios"
+   dentro do card do veículo + modal "+ Instalar Acessório", que
+   reaproveita .veiculo-manobra-lista/.veiculo-manobra-linha* (mesmo
+   visual de linha "cinza + desabilitada" já usado pelo modal de
+   Manobra). ---------- */
+.veiculo-acessorios-secao {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+.veiculo-acessorios-acoes {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+.veiculo-acessorios-acoes .btn-ghost {
+    font-size: 0.78rem;
+    padding: 7px 12px;
+}
+/* .veiculo-acessorio-linha: usada tanto na lista de instalados (dentro
+   do card) quanto no modal "+ Instalar Acessório" — mesmo visual base
+   de .veiculo-manobra-linha (borda + faixa lateral lime), só um pouco
+   mais compacta. */
+.veiculo-acessorio-linha {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 3px solid var(--neon-lime);
+    border-radius: 2px;
+    padding: 8px 10px;
+    margin-top: 8px;
+}
+.veiculo-acessorio-linha.desabilitada {
+    border-left-color: rgba(255, 255, 255, 0.2);
+    opacity: 0.65;
+}
+.veiculo-acessorios-secao .veiculo-acessorio-linha:first-of-type {
+    margin-top: 8px;
+}
+.veiculo-acessorio-linha-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.veiculo-acessorio-linha-acoes {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+.veiculo-acessorio-linha-acoes .btn-ghost {
+    font-size: 0.68rem;
+    padding: 4px 8px;
+}
+.veiculo-acessorio-testar-btn,
+.veiculo-acessorio-usar-btn {
+    flex: 1;
+    min-width: 90px;
+}
+.veiculo-acessorio-remover-btn {
+    flex: 0 0 auto;
+}
+
+/* ---------- Combate ---------- */
+.entity-list .manobra-alcance {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--neon-blue);
+    border: 1px solid rgba(14,165,233,0.3);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+/* ---------- Treinamento ---------- */
+.treino-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 10px;
+}
+.treino-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-left: 3px solid var(--neon-lime);
+    border-radius: 2px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.treino-card-titulo {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+}
+.treino-progresso-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.treino-progresso-fill {
+    height: 100%;
+    background: var(--neon-lime);
+    box-shadow: 0 0 6px rgba(163,230,53,0.5);
+}
+.treino-progresso-texto {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+}
+.treino-card select, .treino-card button { margin-top: 4px; }
+.treino-fila-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 2px 0 0;
+    padding-left: 18px;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+}
+.treino-fila-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+.btn-remover-fila-treino {
+    line-height: 1;
+    padding: 0 6px;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+}
+.btn-remover-fila-treino:hover { color: var(--neon-lime); }
+
+/* ---------- Barra de Volume dos recipientes (mochila etc., expandidos) ---------- */
+.volume-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 4px 10px;
+}
+.volume-bar-texto {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+}
+.volume-bar-texto-estourado {
+    color: var(--neon-red);
+    font-weight: 600;
+}
+.volume-bar-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.volume-bar-fill {
+    height: 100%;
+    background: var(--neon-lime);
+    box-shadow: 0 0 6px rgba(163,230,53,0.5);
+    transition: width 0.35s ease, background-color 0.35s ease;
+}
+.volume-bar-fill.volume-bar-estourado {
+    background: var(--neon-red);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.65);
+    animation: volume-bar-pisca 1s ease-in-out infinite;
+}
+@keyframes volume-bar-pisca {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+/* Um recipiente pode ter mais de um compartimento (passo 13 do
+   projeto-slots-porte.txt) — cada um ganha seu próprio texto + barra
+   dentro do .volume-bar-wrap (que já dá o espaçamento vertical entre
+   eles via gap); esta classe só empilha texto/barra internamente. */
+.compartimento-badge {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+/* Separador sutil entre compartimentos quando o recipiente tem mais
+   de um cadastrado (ex: calça com "Bolso frente esq." + "Bolso de
+   trás") — o primeiro da lista não ganha borda, só os seguintes,
+   pra não duplicar linha com o padding do .volume-bar-wrap. */
+.compartimento-badge + .compartimento-badge {
+    padding-top: 6px;
+    margin-top: 2px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- Indicador fixo de mãos livres (passo 19 — Fase 8.5 do
+   projeto-slots-porte.txt) ---------- */
+/* Reaproveita a caixa .hint (mesmo estilo do #resumo-carga logo
+   acima), só reforça o peso da fonte pra ele ler como um indicador
+   de estado (tipo contador), não como um texto explicativo comum. */
+#resumo-maos {
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+/* ---------- Modal: linhas de modificador ---------- */
+.modificador-row, .modificacao-arma-row {
+    display: grid;
+    grid-template-columns: 1fr 80px auto 32px;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+.modificacao-arma-row { grid-template-columns: 1fr 32px; }
+.modificador-row select, .modificador-row input,
+.modificacao-arma-row input { margin: 0; }
+@media (max-width: 600px) {
+    /* No celular, a linha de modificador vira 2 fileiras: alvo+valor em
+       cima, "Ocasião especial" + remover embaixo — 4 colunas fixas não
+       cabem na largura da tela. */
+    .modificador-row {
+        grid-template-columns: 1fr 80px 32px;
+    }
+    .mod-ocasional-label {
+        grid-column: 1 / 3;
+    }
+}
+.mod-remover, .modarma-remover {
+    padding: 6px;
+    font-size: 0.9rem;
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+}
+
+/* ---------- Modal: linhas de efeito de equipamento médico (Fase 3 do
+   plano-efeitos-equipamentos-medicos.txt) ---------- */
+.efeito-medico-row {
+    border: var(--border-style);
+    border-radius: 2px;
+    padding: 8px;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.02);
+}
+.efeito-medico-row-topo {
+    display: grid;
+    grid-template-columns: 1fr 32px;
+    gap: 8px;
+    align-items: center;
+}
+.efeito-medico-row-topo select { margin: 0; }
+.efmed-descricao { margin: 6px 0; }
+.efmed-campos {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.efmed-campo label {
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+}
+.efmed-campo input[type="number"] { margin: 0; }
+.efmed-checklist {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+}
+.efmed-checklist label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    font-weight: normal;
+    margin: 0;
+}
+.efmed-mod-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 32px;
+    gap: 8px;
+    margin-bottom: 6px;
+    align-items: center;
+}
+.efmed-mod-row select, .efmed-mod-row input { margin: 0; }
+.efmed-remover, .efmed-mod-remover {
+    padding: 6px;
+    font-size: 0.9rem;
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+}
+
+/* ---------- Modal: linhas de compartimento (Fase 8 — slots de porte) ---------- */
+.compartimento-row {
+    display: grid;
+    grid-template-columns: 1.5fr 90px 1fr 32px;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+.compartimento-row input, .compartimento-row select { margin: 0; }
+.compartimento-remover {
+    padding: 6px;
+    font-size: 0.9rem;
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+}
+
+/* ---------- Searchable select (perícias) ---------- */
+.searchable-options {
+    max-height: 180px;
+    overflow-y: auto;
+    border: var(--border-style);
+    border-top: none;
+    background: #000;
+    border-radius: 0 0 2px 2px;
+}
+.searchable-options .opcao {
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    color: var(--text-main);
+}
+.searchable-options .opcao:hover, .searchable-options .opcao.destaque {
+    background: rgba(139, 92, 246, 0.18);
+    color: #fff;
+}
+.searchable-options .opcao-vazia {
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    font-style: italic;
+}
+
+/* ---------- Modal largo (wizard, mestre) ---------- */
+.modal-content.modal-largo { width: 680px; }
+
+/* ---------- Wizard de criação ---------- */
+.criacao-etapa-label {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--neon-purple);
+    margin-bottom: 4px;
+}
+.funcao-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin: 10px 0;
+}
+.funcao-card {
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+.funcao-card:hover { background: rgba(255,255,255,0.05); }
+.funcao-card.selecionada { border-color: var(--neon-lime); background: rgba(163,230,53,0.07); }
+.funcao-card .funcao-nome { font-family: var(--font-display); color: #fff; font-size: 0.9rem; }
+.funcao-card .funcao-desc { font-size: 0.7rem; color: var(--text-dim); line-height: 1.4; }
+
+.pontos-restantes-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(163,230,53,0.06);
+    border: 1px dashed rgba(163,230,53,0.35);
+    padding: 8px 14px;
+    border-radius: 2px;
+    margin-bottom: 10px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--neon-lime);
+}
+
+.distribuicao-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+}
+.distribuicao-linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 8px 12px;
+    border-radius: 2px;
+}
+.distribuicao-linha > span { flex: 1 1 200px; }
+/* No passo de Level Up as linhas têm texto mais longo (nome da perícia +
+   especializações já compradas + botão "Comprar especialização nível X"),
+   então força 1 item por linha em vez do grid multi-coluna padrão. */
+#levelup-corpo .distribuicao-grid { grid-template-columns: 1fr; }
+.distribuicao-linha .stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.distribuicao-linha .stepper button {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    font-size: 0.85rem;
+    line-height: 1;
+}
+.distribuicao-linha .stepper-valor {
+    font-family: var(--font-mono);
+    min-width: 22px;
+    text-align: center;
+}
+.distribuicao-linha.travada { opacity: 0.55; }
+
+/* ---------- Painel do Mestre ---------- */
+.mestre-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.godmode-toggle {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--neon-red);
+    text-transform: none;
+    letter-spacing: 0;
+}
+.godmode-toggle input { width: auto; }
+.godmode-toggle.godmode-suboption {
+    padding-left: 22px;
+    color: var(--text-dim);
+    margin-top: -6px;
+}
+/* `#mestre-corpo` e `#combate-mestre-corpo` moram dentro dos painéis
+   laterais (`.drawer-mestre` / `.drawer-combate`), que são
+   `display:flex; flex-direction:column; overflow-y:auto`. Sem um
+   `min-height: 0` explícito aqui, o bug clássico do flexbox entra em
+   ação: um item de flex-column recusa encolher abaixo da altura do
+   próprio conteúdo (min-height:auto por padrão), então formulários
+   grandes (ex: a mini-ficha de NPC) empurrariam o painel inteiro pra
+   baixo do viewport em vez de rolar. Dar a `#mestre-corpo` seu PRÓPRIO
+   scroll interno (com altura máxima e min-height:0) resolve isso: o
+   cabeçalho e a grade de botões ficam sempre fixos no topo, visíveis,
+   e só o conteúdo dinâmico rola por conta própria.
+*/
+#mestre-corpo, #combate-mestre-corpo {
+    display: flex; flex-direction: column; gap: 10px;
+    max-height: 60vh; overflow-y: auto; min-height: 0;
+}
+
+.xp-multiplo-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 240px;
+    overflow-y: auto;
+    border: var(--border-style);
+    border-radius: 2px;
+    padding: 8px;
+}
+.xp-multiplo-linha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 8px;
+    border-radius: 2px;
+    cursor: pointer;
+}
+.xp-multiplo-linha:hover { background: rgba(255, 255, 255, 0.05); }
+.xp-multiplo-linha input[type="checkbox"] { width: auto; flex-shrink: 0; }
+.xp-multiplo-nome {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    color: #fff;
+    flex: 1;
+}
+.xp-multiplo-atual {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    flex-shrink: 0;
+}
+.xp-multiplo-acoes-topo {
+    display: flex;
+    gap: 8px;
+}
+.xp-multiplo-acoes-topo button { font-size: 0.68rem; padding: 6px 10px; }
+.mestre-dashboard-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 10px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+}
+.mestre-dashboard-item:hover { background: rgba(255,255,255,0.06); }
+.npc-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-left: 3px solid var(--neon-red);
+    padding: 10px 14px;
+    border-radius: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* ---------- Log de Dados (fixo) ---------- */
+.log-dados {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    height: 380px;
+    padding: 0;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.log-dados.minimizado { height: 44px; }
+.log-dados.minimizado .log-dados-lista-wrap,
+.log-dados.minimizado .log-dados-rolador { display: none; }
+
+.log-dados-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: var(--border-style);
+    flex-shrink: 0;
+}
+.log-dados-titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.log-dados-online {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--neon-lime);
+    box-shadow: 0 0 6px rgba(163, 230, 53, 0.8);
+    display: inline-block;
+}
+.log-dados-header button { padding: 4px 10px; font-size: 0.7rem; }
+
+.log-dados-lista-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+}
+.log-dados ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: auto; /* empurra as mensagens pro fundo quando há poucas */
+}
+
+/* Cada rolagem é uma "bolha" de chat */
+.log-dados li.log-bolha {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 3px solid var(--neon-purple);
+    border-radius: 2px 10px 10px 10px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    animation: log-entrada 0.18s ease-out;
+}
+.log-dados li.log-bolha.log-mestre { border-left-color: var(--neon-red); }
+.log-dados li.log-bolha.log-critico-acerto {
+    border-left-color: var(--neon-gold);
+    border-color: rgba(250, 204, 21, 0.35);
+    background: rgba(250, 204, 21, 0.06);
+    box-shadow: 0 0 14px rgba(250, 204, 21, 0.15);
+}
+.log-dados li.log-bolha.log-critico-falha {
+    border-left-color: var(--neon-red);
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.07);
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.18);
+}
+.log-badge-critico {
+    display: inline-block;
+    align-self: flex-start;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin: 1px 0 2px;
+}
+.log-badge-critico.acerto { color: #1a1a00; background: var(--neon-gold); }
+.log-badge-critico.falha { color: #fff; background: var(--neon-red); }
+@keyframes log-entrada {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.log-linha-topo {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+.log-quem {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    color: var(--neon-lime);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.log-mestre .log-quem { color: var(--neon-red); }
+.log-hora {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    flex-shrink: 0;
+}
+.log-detalhe {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-dim);
+}
+.log-palavra-acerto {
+    color: var(--neon-lime);
+    font-weight: 700;
+    text-shadow: 0 0 6px rgba(163, 230, 53, 0.5);
+}
+.log-palavra-falha {
+    color: var(--neon-red);
+    font-weight: 700;
+    text-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+}
+.log-resultado-linha {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 1px;
+}
+.log-resultado {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 1rem;
+    color: #fff;
+}
+.log-vazio {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    font-style: italic;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.log-dados-rolador {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 6px;
+    padding: 10px 12px;
+    border-top: var(--border-style);
+    flex-shrink: 0;
+}
+.log-dados-rolador input { padding: 7px; font-size: 0.78rem; }
+.log-dados-rolador button { padding: 7px; font-size: 0.72rem; }
+
+@media (max-width: 600px) {
+    .log-dados { width: calc(100% - 32px); right: 16px; left: 16px; bottom: 16px; height: 320px; }
+}
+
+/* ---------- Barra de salvar ---------- */
+.save-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 22px;
+}
+.save-status {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+}
+
+/* ---------- Campo somente leitura (bloqueado pro jogador) ---------- */
+[data-locked="true"] {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+@media (max-width: 600px) {
+    .app-shell { padding: 12px; padding-top: calc(var(--topbar-h, 90px) + 12px); }
+    .tab-panel { padding: 18px; }
+}
+
+/* =====================================================================
+   OTIMIZAÇÃO MOBILE (celular)
+   Três problemas resolvidos aqui, todos confirmados no CSS acima:
+   1) .categorias-nav e .tabs-nav usavam flex-wrap: wrap — com 4
+      categorias e até 14 abas, isso empilhava várias linhas de botão
+      ANTES do conteúdo da aba aparecer, comendo boa parte da tela.
+      Vira uma faixa única que rola na horizontal (como abas de app).
+   2) .grid-form e .mestre-grid tentavam manter 2+ colunas mesmo em
+      telas de ~360-390px (minmax 140-160px ainda cabe 2 no auto-fit),
+      espremendo label+campo. Vira 1 coluna só, cheia largura.
+   3) A topbar fixa quebrava em 3 linhas empilhadas (nome / barras de
+      vida-energia + equipados / botões Mapa-Sair), ocupando muita
+      altura fixa no topo. Aqui ela fica mais compacta: barras menores,
+      botões mais enxutos, itens equipados dão scroll horizontal
+      próprio em vez de empurrar pra baixo.
+   ===================================================================== */
+@media (max-width: 700px) {
+
+    /* ---- 1) Navegação de categoria + abas: rolagem horizontal ---- */
+    .categorias-nav,
+    .tabs-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+    }
+    .categorias-nav::-webkit-scrollbar,
+    .tabs-nav::-webkit-scrollbar { display: none; }
+    .categoria-btn,
+    .tab-btn {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+    .categoria-btn { padding: 7px 12px; font-size: 0.68rem; }
+    .tab-btn { padding: 8px 10px; font-size: 0.72rem; }
+
+    /* ---- 2) Formulários: 1 coluna só, sem espremer campo ---- */
+    .grid-form,
+    .grid-form.grid-3,
+    .grid-form.grid-4 {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .campo.largo { grid-column: auto; }
+    .mestre-grid { grid-template-columns: 1fr; }
+
+    /* ---- 3) Topbar mais compacta ---- */
+    .topbar { padding: 10px 14px; gap: 8px; border-radius: 0 0 10px 10px; }
+    .topbar-id h1 { font-size: 1.05rem; }
+    .topbar-vitals { gap: 10px; }
+    .vital-bar-track { width: 90px; }
+    .vital-equipados {
+        max-width: 100%;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .vital-equipados::-webkit-scrollbar { display: none; }
+    .topbar-actions { gap: 8px; }
+    .topbar-actions button { padding: 8px 12px; font-size: 0.7rem; }
+
+    /* Painéis/formulários genéricos: menos respiro lateral pra sobrar
+       espaço útil pro conteúdo em telas estreitas. */
+    .panel { padding: 14px; }
+}
+
+@media (max-width: 420px) {
+    .vital-bar-track { width: 70px; }
+    .topbar-id h1 { font-size: 0.95rem; }
+}
+
+/* ---------- Overlay de Morte (0 PV / 0 Energia) ---------- */
+/* Cobre a tela inteira — enquanto visível, bloqueia qualquer interação
+   com o resto da ficha por baixo (ver #overlay-morte em ficha.html e
+   verificarMorte() em ficha.js). */
+.overlay-morte {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 5, 5, 0.94);
+    backdrop-filter: blur(2px);
+    padding: 24px;
+    text-align: center;
+}
+.overlay-morte-conteudo {
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+.overlay-morte-conteudo h1 {
+    font-family: var(--font-display, var(--font-mono));
+    font-size: clamp(2.4rem, 10vw, 4.2rem);
+    color: var(--neon-red);
+    text-shadow: 0 0 18px rgba(239, 68, 68, 0.65), 0 0 40px rgba(239, 68, 68, 0.35);
+    letter-spacing: 2px;
+    margin: 0;
+    line-height: 1.05;
+}
+.overlay-morte-conteudo p {
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    margin: 0;
+}
+.overlay-morte-botao {
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 16px 26px;
+    animation: overlay-morte-tremor 0.18s infinite;
+}
+.overlay-morte-botao:disabled {
+    opacity: 0.5;
+    animation: none;
+    cursor: not-allowed;
+}
+@keyframes overlay-morte-tremor {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(-1px, 1px) rotate(-0.4deg); }
+    50% { transform: translate(1px, -1px) rotate(0.4deg); }
+    75% { transform: translate(-1px, -1px) rotate(-0.3deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+.overlay-morte-resultado {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    min-height: 1.2em;
+}
+.overlay-morte-resultado.sucesso { color: var(--neon-lime); }
+.overlay-morte-resultado.falha { color: var(--neon-red); }
+.overlay-morte.definitiva .overlay-morte-conteudo h1 { color: var(--neon-red); }
+.overlay-morte.definitiva .overlay-morte-botao { display: none; }
+
+/* ---------- Easter egg (botão invisível + overlay sem saída) ---------- */
+/* Botão invisível no canto inferior esquerdo da tela — sem borda, sem
+   fundo, sem cursor especial, só ocupando uma área clicável mesmo.
+   Não deve aparecer nada visualmente ali, é pra ser "achado" sem querer. */
+.easter-egg-btn {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    z-index: 50;
+    cursor: default;
+    -webkit-tap-highlight-color: transparent;
+}
+/* Overlay que cobre a tela inteira e não tem nenhum jeito de fechar por
+   fora — só atualizando a página mesmo. Reaproveita a mesma lógica
+   visual do overlay de morte (bloqueia tudo por baixo). */
+.overlay-easter-egg {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 5, 5, 0.97);
+    backdrop-filter: blur(3px);
+    padding: 24px;
+    text-align: center;
+}
+.overlay-easter-egg h1 {
+    font-family: var(--font-display, var(--font-mono));
+    font-size: clamp(2rem, 9vw, 3.6rem);
+    color: var(--neon-lime);
+    text-shadow: 0 0 18px rgba(163, 255, 18, 0.65), 0 0 40px rgba(163, 255, 18, 0.35);
+    letter-spacing: 2px;
+    margin: 0;
+}
+
+/* Botão flutuante "Reviver (Godmode)" — só aparece pro Mestre em
+   Godmode quando a ficha aberta está morta (ver #btn-reviver-godmode
+   em ficha.html e verificarMorte() em ficha.js). */
+.godmode-revive-btn {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 9998;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    padding: 10px 16px;
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.45);
+}
+
+/* ---------- Saúde (aba "Saúde" — feridas persistentes, ver
+   plano-sistema-saude-ferimentos.txt) ---------- */
+.ferida-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-left: 3px solid var(--neon-red);
+    border-radius: 2px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+}
+.ferida-topo {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.ferida-tipo {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+}
+.ferida-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+.ferida-historico {
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+}
+.ferida-historico summary { cursor: pointer; }
+.ferida-historico ul { margin: 6px 0 0; padding-left: 18px; }
+
+/* Implantes (aba Saúde, painel provisório — Fase 6 do plano de
+   implantes/biomecânica; ver plano-implantes-biomecanica.txt). Reusa o
+   molde do .ferida-card acima, só troca a cor de destaque pra não
+   confundir visualmente com ferida. */
+.implante-card { border-left-color: var(--neon-blue); }
+
+/* Histórico de XP (plano-registro-xp.txt) — mesmo molde do
+   .ferida-historico acima, só um pouco mais respirado por ficar sozinho
+   na seção "Progressão" em vez de dentro de um card apertado. */
+.xp-historico {
+    margin-top: 4px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+}
+.xp-historico summary {
+    cursor: pointer;
+    color: var(--neon-lime);
+}
+.xp-historico ul { margin: 8px 0 0; padding-left: 18px; }
+.xp-historico li { margin-bottom: 4px; }
+.xp-historico .xp-historico-titulo { color: #fff; }
+.xp-historico .xp-historico-vazio { color: var(--text-dim); font-style: italic; }
+
+/* Silhueta visual na aba Saúde (plano-silhueta-saude.txt, Fase 2): SVG
+   inline de corpo humano com zonas clicáveis. Só a base visual/interação
+   aqui — cores por estado de ferida (Fase 4), agregação (Fase 3) e a
+   caixinha flutuante (Fase 5) entram por cima, sem mudar este bloco. */
+.saude-silhueta-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 0 16px;
+    position: relative;
+}
+.saude-silhueta-svg {
+    width: 100%;
+    max-width: 180px;
+    height: auto;
+}
+.zona-corpo {
+    fill: rgba(139, 92, 246, 0.12);
+    stroke: var(--neon-purple);
+    stroke-width: 1.5;
+    cursor: pointer;
+    transition: fill 0.15s ease, stroke 0.15s ease, filter 0.15s ease;
+}
+.zona-corpo:hover {
+    fill: rgba(139, 92, 246, 0.32);
+    stroke: var(--neon-lime);
+    filter: drop-shadow(0 0 4px rgba(163, 230, 53, 0.5));
+}
+
+/* Cores/ícones por estado (plano-silhueta-saude.txt, Fase 4) — aplicadas
+   por cima do estilo neutro/hover acima, conforme o "pior estado"
+   calculado em agruparFeridasPorLocal (saude.js). A ordem de
+   prioridade (amputado > sangrando > infeccionada > aberta > tratada)
+   já vem resolvida de lá; aqui é só o mapeamento visual. */
+.zona-corpo.zona-aberta {
+    fill: rgba(239, 68, 68, 0.55);
+    stroke: var(--neon-red);
+}
+.zona-corpo.zona-sangrando {
+    fill: rgba(239, 68, 68, 0.6);
+    stroke: var(--neon-red);
+}
+.zona-corpo.zona-infeccionada {
+    fill: rgba(34, 197, 94, 0.2);
+    stroke: #22c55e;
+    stroke-width: 2;
+}
+.zona-corpo.zona-amputada {
+    fill: rgba(10, 10, 12, 0.85);
+    stroke: #9ca3af;
+    stroke-dasharray: 3 2;
+}
+.zona-corpo.zona-tratada {
+    fill: rgba(250, 204, 21, 0.18);
+    stroke: var(--neon-gold);
+}
+/* Ferida antiga sem lado sorteado (Fase 1.5/3) — mostrada nas duas
+   zonas do grupo, contorno tracejado sinaliza "lado indefinido". */
+.zona-corpo.zona-indefinida {
+    stroke-dasharray: 4 3;
+}
+
+/* Sempre por último (mesma especificidade das classes de estado acima,
+   ganha por ordem no arquivo) — clicar numa zona precisa continuar
+   visivelmente destacado mesmo quando ela já tem cor de estado. */
+.zona-corpo.zona-selecionada {
+    fill: rgba(163, 230, 53, 0.35);
+    stroke: var(--neon-lime);
+    stroke-width: 2;
+    filter: drop-shadow(0 0 6px rgba(163, 230, 53, 0.6));
+}
+
+.zona-icone {
+    font-size: 15px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+}
+.zona-icone.zona-icone-pulsando {
+    animation: zona-icone-pulso 1.1s ease-in-out infinite;
+}
+@keyframes zona-icone-pulso {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+}
+.zona-badge-fundo {
+    fill: var(--neon-red);
+    pointer-events: none;
+}
+.zona-badge-texto {
+    font-size: 10px;
+    font-weight: 700;
+    fill: #050505;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+}
+
+.saude-silhueta-legenda {
+    text-align: center;
+    max-width: 220px;
+}
+
+/* Caixinha flutuante ao clicar numa zona com ferida (plano-silhueta-
+   saude.txt, Fase 5). Posição (left/top) e lado da seta são definidos
+   por JS via style inline + classe .seta-esquerda/.seta-direita —
+   aqui só a aparência fixa (fundo, borda, seta) e o layout interno. */
+.saude-silhueta-popover {
+    position: absolute;
+    z-index: 5;
+    width: 220px;
+    max-width: calc(100vw - 48px);
+    background: var(--bg-card, #16161a);
+    border: 1px solid var(--neon-purple);
+    border-radius: 8px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+    padding: 10px 12px;
+}
+.saude-silhueta-popover-fechar {
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+}
+.saude-silhueta-popover-fechar:hover { color: var(--neon-lime); }
+.saude-silhueta-popover-corpo {
+    font-size: 0.85rem;
+    max-height: 260px;
+    overflow-y: auto;
+}
+.saude-silhueta-popover-titulo {
+    color: #fff;
+    font-weight: 600;
+    margin: 0 0 6px;
+    padding-right: 16px;
+}
+.saude-silhueta-popover-vazio {
+    color: var(--text-dim);
+    font-style: italic;
+}
+.saude-silhueta-popover-ferida {
+    border-top: 1px solid rgba(139, 92, 246, 0.25);
+    padding: 6px 0;
+}
+.saude-silhueta-popover-ferida:first-of-type { border-top: none; padding-top: 0; }
+.saude-silhueta-popover-ferida-topo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+.saude-silhueta-popover-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.saude-silhueta-popover-acoes .btn-lime,
+.saude-silhueta-popover-acoes .btn-ghost {
+    padding: 3px 8px;
+    font-size: 0.78rem;
+}
+
+/* Seta apontando pro marcador — triângulo CSS clássico (borda
+   transparente dos 3 lados + 1 lado colorido). O lado que recebe cor
+   muda conforme a caixinha abre à direita ou à esquerda do marcador
+   (JS decide via .seta-esquerda/.seta-direita, ver posicionarPopoverSilhueta). */
+.saude-silhueta-popover-seta {
+    position: absolute;
+    top: 50%;
+    width: 0;
+    height: 0;
+    transform: translateY(-50%);
+    border: 8px solid transparent;
+}
+.saude-silhueta-popover.seta-esquerda .saude-silhueta-popover-seta {
+    left: -8px;
+    border-right-color: var(--neon-purple);
+}
+.saude-silhueta-popover.seta-direita .saude-silhueta-popover-seta {
+    right: -8px;
+    border-left-color: var(--neon-purple);
+}
