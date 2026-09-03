@@ -33,7 +33,7 @@ import {
     receitaLivreDoSlot, receitasModuloDetonacaoDisponiveis, concederReceitaConhecida,
     removerReceitaConhecida, receitasExtrasDaPericia, checarConsumoDeAcao, lerDeltaOcasionais,
     gerarIdLocal, nomeDeFicha, categoriasDistintas, abrirModalNovo, resolverTesteAprenderReceita,
-} from "../ficha.js";
+} from "../ficha.js?v=20260830-npcnivelpv";
 import {
     rolarD20, modificadoresOcasionaisDaPericia, calcularTotalPericia,
 } from "../regras.js";

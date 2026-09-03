@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------
 
 import { estado } from "../estado.js";
-import { el, renderizarListaSimples, resumoModificadores, escapeHtml } from "../ficha.js";
+import { el, renderizarListaSimples, resumoModificadores, escapeHtml } from "../ficha.js?v=20260830-npcnivelpv";
 import { CATALOGO_DROGAS } from "../dados-manual.js";
 
 export function renderizarEspecializacoes() {

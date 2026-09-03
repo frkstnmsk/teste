@@ -22,7 +22,7 @@ import {
 
 // // ADAPTAR: troque pelos imports reais do seu projeto, se os
 // // nomes/caminhos forem diferentes destes:
-import { pausarSync, retornarSync, toast } from './ficha.js';
+import { pausarSync, retornarSync, toast } from './ficha.js?v=20260830-npcnivelpv';
 
 const CAMINHO_COMBATE = 'combates/ativo';
 

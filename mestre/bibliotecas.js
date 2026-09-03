@@ -16,7 +16,7 @@ import {
     el, escapeHtml, toast, ativarSincronizacao,
     ativarPreviewFlutuanteImagem, abrirModalEdicao, abrirModalNovo,
     montarBarraFiltro, itemPassaFiltroCategoria, montarListaComScrollInfinito,
-} from "../ficha.js";
+} from "../ficha.js?v=20260830-npcnivelpv";
 import { rotuloTag } from "../dados-manual.js";
 import { ouvirItensGlobais, excluirItemBanco } from "../itens-globais.js";
 import { ouvirReceitasGlobais, excluirReceitaBanco } from "../receitas-globais.js";

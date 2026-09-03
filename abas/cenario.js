@@ -63,7 +63,7 @@ import {
     pegarItemCenario, pegarDinheiroCenario, testarDirigirVeiculosPerseguicao,
     tentarRotaFugaPerseguicao, abrirModalManobraVeiculo, toast, nomeDeFicha,
     abrirModalNovoItemParaCenario, criarSelectFichas
-} from "../ficha.js";
+} from "../ficha.js?v=20260830-npcnivelpv";
 import { pontosPorResultadoTesteFuga } from "../regras.js";
 import {
     rotuloTag, rotuloTipoVeiculo, bairroPerseguicao, tabelaPontuacaoFugaCadastrada,

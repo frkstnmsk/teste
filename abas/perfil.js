@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------
 
 import { estado } from "../estado.js";
-import { el, CAMPOS_SO_MESTRE, renderizarListaSimples } from "../ficha.js";
+import { el, CAMPOS_SO_MESTRE, renderizarListaSimples } from "../ficha.js?v=20260830-npcnivelpv";
 import { funcaoDe } from "../criacao.js";
 import { custoSemanalPadraoDeVida } from "../mestre.js";
 

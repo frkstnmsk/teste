@@ -34,7 +34,7 @@ import {
     resolverAgarrar, resolverDesarmar, resolverDerrubar,
     resolverDelimitarAlcance, resolverRetomarAlcance, resolverImobilizar,
     resolverImobilizarJiuJitsu, resolverQuebrarOssosJiuJitsu
-} from "../ficha.js";
+} from "../ficha.js?v=20260830-npcnivelpv";
 import { resolverAtaque } from "./inventario.js";
 import { calcularTotalPericia, modificadoresOcasionaisDaPericia } from "../regras.js";
 import { listaPericiasPorCategoria, buscarPericiaPorNome } from "../dados-manual.js";

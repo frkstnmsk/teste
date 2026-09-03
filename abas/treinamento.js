@@ -21,7 +21,7 @@
 import { db } from "../firebase-config.js";
 import { ref, update } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 import { estado } from "../estado.js";
-import { el, toast, caminhoBase, escapeHtml } from "../ficha.js";
+import { el, toast, caminhoBase, escapeHtml } from "../ficha.js?v=20260830-npcnivelpv";
 import { limiteTreinoAtributo } from "../regras.js";
 import { atendeRequisitoPericia } from "../dados-manual.js";
 import {

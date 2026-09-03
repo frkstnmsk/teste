@@ -18,7 +18,7 @@ import {
     el, escapeHtml, toast,
     montarBarraFiltro, montarListaComScrollInfinito, itemPassaFiltroCategoria,
     categoriasDistintas, criarInput,
-} from "../ficha.js";
+} from "../ficha.js?v=20260830-npcnivelpv";
 import {
     ATRIBUTOS_PRIMARIOS, ATRIBUTOS_SECUNDARIOS, RECURSOS,
 } from "../regras.js";

@@ -22,7 +22,7 @@
 // ---------------------------------------------------------------------
 
 import { estado } from "../estado.js";
-import { toast, idAtivo, agendarSalvamento } from "../ficha.js";
+import { toast, idAtivo, agendarSalvamento } from "../ficha.js?v=20260830-npcnivelpv";
 import { criarAcaoPendente } from "../mestre.js?v=20260830-npcnivelpv";
 
 // Quantidade de slots de Determinação liberados pelo Nível do

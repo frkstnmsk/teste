@@ -21,7 +21,7 @@ import { estado } from "../estado.js";
 import {
     el, toast, idAtivo, textoDetalhamento, podeEditarPericiaAtributo, maximoComOverride,
     meuParticipanteIdCombate, npcParticipanteIdCombate,
-} from "../ficha.js";
+} from "../ficha.js?v=20260830-npcnivelpv";
 import {
     renderizarEstadoSaude, renderizarEstadoEnergia, renderizarComaBadge, renderizarDesmaioBadge,
 } from "./saude.js";

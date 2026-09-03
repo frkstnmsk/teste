@@ -39,7 +39,7 @@ import {
     decrementarItemMedico, implantesContagemELimite, resumoModificadores,
     testarAdaptacaoImplante, mestreInstalarImplanteSemTeste, aplicarDanoUsoImplanteGodmode,
     avaliarAvisoCustoVida,
-} from "../ficha.js";
+} from "../ficha.js?v=20260830-npcnivelpv";
 import {
     TRATAMENTOS_FERIDA, DIFICULDADE_INFECCAO_MINIMA, DIFICULDADE_INFECCAO_MAXIMA,
     somaModificadoresPara, modificadoresOcasionaisDoAlvo, rotuloAlvo,

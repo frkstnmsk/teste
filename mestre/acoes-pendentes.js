@@ -26,7 +26,7 @@ import {
     participanteIdPorAlvo, buscarConstituicaoAlvo, combateComIniciativaAtivo,
     criarSelectFichas,
     ROTULOS_ACAO_MESTRE,
-} from "../ficha.js";
+} from "../ficha.js?v=20260830-npcnivelpv";
 import { montarPainelXpMultiplo, montarPainelCondicaoMestre } from "./painel-mestre.js";
 import { montarPainelNpcs } from "./npcs.js";
 import { montarPainelBibliotecaItens, montarPainelBibliotecaReceitas, montarDashboardFichas } from "./bibliotecas.js";

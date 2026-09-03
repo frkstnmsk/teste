@@ -7,7 +7,7 @@
 // ---------------------------------------------------------------------
 
 import { estado } from "../estado.js";
-import { el, renderizarListaSimples, podeEditarCaracteristicaNarrativa, resumoModificadores, montarDistribuidorBonus } from "../ficha.js";
+import { el, renderizarListaSimples, podeEditarCaracteristicaNarrativa, resumoModificadores, montarDistribuidorBonus } from "../ficha.js?v=20260830-npcnivelpv";
 import { podeAdicionarDesvantagem, MAX_DESVANTAGENS, pontosBonusPorDesvantagens } from "../criacao.js";
 import { calcularAbstinenciaVicio } from "../regras.js";
 
