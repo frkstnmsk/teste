@@ -182,15 +182,27 @@ async function salvarTreinamento() {
 // narrativa manual, só o Mestre marca (checkbox trava sozinho pra
 // jogador em renderizarTreinamento). Fica salva direto na raiz da
 // ficha, igual outros poucos campos soltos que não têm objeto próprio.
-el.chkUsaEsteroides.addEventListener("change", async (e) => {
-    if (!estado.isMestre) return;
-    estado.fichaAtual.usaEsteroides = e.target.checked;
-    await update(ref(db, caminhoBase()), { usaEsteroides: e.target.checked });
-    toast(e.target.checked
-        ? "Esteroide ativado — Força e Constituição podem ser treinadas até 9."
-        : "Esteroide desativado — Força e Constituição voltam ao limite normal de treino (7).");
-    renderizarTreinamento();
-});
+//
+// CORREÇÃO (bug do import circular): esse listener não pode mais rodar
+// solto no corpo do módulo. `el` (importado de ficha.js) ainda está em
+// TDZ nesse momento, porque ficha.js importa abas/treinamento.js ANTES
+// de declarar `export const el = {...}` — acessar `el.chkUsaEsteroides`
+// direto no carregamento do módulo estoura "Cannot access 'el' before
+// initialization" e trava a página inteira. Por isso virou uma função
+// exportada, chamada só depois que tudo já carregou (ver
+// tentarOuAvisar("checkbox esteroide", configurarCheckboxEsteroides)
+// em ficha.js), igual configurarPopupTreinamento já fazia.
+export function configurarCheckboxEsteroides() {
+    el.chkUsaEsteroides.addEventListener("change", async (e) => {
+        if (!estado.isMestre) return;
+        estado.fichaAtual.usaEsteroides = e.target.checked;
+        await update(ref(db, caminhoBase()), { usaEsteroides: e.target.checked });
+        toast(e.target.checked
+            ? "Esteroide ativado — Força e Constituição podem ser treinadas até 9."
+            : "Esteroide desativado — Força e Constituição voltam ao limite normal de treino (7).");
+        renderizarTreinamento();
+    });
+}
 
 // =====================================================================
 // POPUP DE TREINAMENTO (Mestre)

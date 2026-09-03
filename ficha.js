@@ -13,7 +13,7 @@ import { renderizarEspecializacoes, configurarCampoSubstanciaVicio } from "./aba
 // renderizarNotas (abas/notas.js) não é mais chamada direto daqui — o
 // único chamador (renderizarDarknetENotas) mudou pra abas/darknet.js no
 // Passo 19, que já importa renderizarNotas por conta própria.
-import { renderizarTreinamento, configurarPopupTreinamento } from "./abas/treinamento.js";
+import { renderizarTreinamento, configurarPopupTreinamento, configurarCheckboxEsteroides } from "./abas/treinamento.js";
 import {
     renderizarAtributos, configurarStatusTopoCarrossel, renderizarRecuperacaoPV, configurarRecuperacaoPV
 } from "./abas/atributos.js";
@@ -794,6 +794,7 @@ async function init() {
     tentarOuAvisar("log de dados", configurarLogDados);
     tentarOuAvisar("aviso de custo de vida", configurarAvisoCustoVida);
     tentarOuAvisar("popup de treinamento", configurarPopupTreinamento);
+    tentarOuAvisar("checkbox esteroide", configurarCheckboxEsteroides);
     tentarOuAvisar("aviso de torniquete", configurarAvisoTorniquete);
     tentarOuAvisar("godmode", configurarGodmode);
     tentarOuAvisar("fator de preço de materiais (veículos)", configurarFatorPrecoMateriaisVeiculo);
