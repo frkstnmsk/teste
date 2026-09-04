@@ -425,7 +425,7 @@ export function renderizarSaude() {
         return;
     }
 
-    const feridasOrdenadas = [...feridasCache].sort((a, b) => (b.criadaEm || 0) - (a.criadaEm || 0));
+    const feridasOrdenadas = [...estado.feridasCache].sort((a, b) => (b.criadaEm || 0) - (a.criadaEm || 0));
 
     el.saudeLista.innerHTML = feridasOrdenadas.map(ferida => {
         const acoes = acoesDeTratamentoParaFerida(ferida);
