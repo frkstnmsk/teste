@@ -497,8 +497,8 @@ export function renderizarManobrasCombate() {
 // =====================================================================
 
 export function configurarCombateAtivo() {
-    ouvirCombateAtivo((estado) => {
-        estado.combateAtivoCache = estado || { ativo: false, participantes: {} };
+    ouvirCombateAtivo((dadosCombate) => {
+        estado.combateAtivoCache = dadosCombate || { ativo: false, participantes: {} };
         // Se o modal do Gerenciador de Combate estiver aberto no momento,
         // atualiza a lista em tempo real.
         if (estado.isMestre && el.modalCombateMestre && el.modalCombateMestre.classList.contains("active")) {

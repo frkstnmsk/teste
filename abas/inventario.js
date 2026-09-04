@@ -669,7 +669,7 @@ export function criarLiItem(id, it, { categorias, modificadoresPlanos, nivel }) 
                 if (filhos.length) {
                     const payloadFilhos = {};
                     filhos.forEach(f => { payloadFilhos[`${f.id}/categoria`] = novaCategoria; });
-                    Object.assign(estado.fichaAtual.inventario, Object.fromEntries(filhos.map(f => [f.id, { ...fichaAtual.inventario[f.id], categoria: novaCategoria }])));
+                    Object.assign(estado.fichaAtual.inventario, Object.fromEntries(filhos.map(f => [f.id, { ...estado.fichaAtual.inventario[f.id], categoria: novaCategoria }])));
                     await update(ref(db, `${caminhoBase()}/inventario`), payloadFilhos);
                 }
             }

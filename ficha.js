@@ -2403,7 +2403,7 @@ async function descontarProjetilDiretoDoEstoque(calibreArma) {
         // senão o item fica com o volume "congelado" no valor de antes do
         // disparo, superestimando o quanto ele ocupa (ex.: num recipiente).
         const volumeAtualizado = Math.floor((Number(proj.volumeUnitario) || 0) * restante);
-        estado.fichaAtual.inventario[proj.id] = { ...fichaAtual.inventario[proj.id], projetil: atualizado, volume: volumeAtualizado };
+        estado.fichaAtual.inventario[proj.id] = { ...estado.fichaAtual.inventario[proj.id], projetil: atualizado, volume: volumeAtualizado };
         await update(ref(db, `${caminhoBase()}/inventario/${proj.id}`), { projetil: atualizado, volume: volumeAtualizado });
     } else {
         // update() só apaga uma chave se ela vier explicitamente como null
@@ -2495,7 +2495,7 @@ export async function carregarCarregador(carregadorId, carregadorItem) {
     if (!candidatos.length) { toast("Não há projéteis desse calibre no inventário.", "erro"); return; }
 
     const projeteisCarregados = (cfg.projeteisCarregados || []).map(p => ({ ...p }));
-    const inventarioAtualizado = { ...fichaAtual.inventario };
+    const inventarioAtualizado = { ...estado.fichaAtual.inventario };
     let carregouAlgo = false;
 
     for (const proj of candidatos) {
@@ -2576,7 +2576,7 @@ async function recarregarArmaSemCarregador(armaId, armaItem) {
     if (!candidatos.length) { toast("Não há projéteis desse calibre soltos no inventário.", "erro"); return; }
 
     const projeteisCarregados = (cfg.projeteisCarregados || []).map(p => ({ ...p }));
-    const inventarioAtualizado = { ...fichaAtual.inventario };
+    const inventarioAtualizado = { ...estado.fichaAtual.inventario };
     let carregouAlgo = false;
 
     for (const proj of candidatos) {
@@ -5807,7 +5807,7 @@ async function consumirMateriaisVeiculo(materiais) {
         const grupos = [...gruposMaterialQualificadosVeiculo(m.material, m.qualidade)].reverse();
         const { atualizacoes } = planejarConsumoMaterial(grupos, Number(m.quantidade) || 0);
         Object.entries(atualizacoes).forEach(([id, valor]) => {
-            atualizacoesInventario[id] = valor === null ? null : { ...fichaAtual.inventario[id], materialQuantidade: valor };
+            atualizacoesInventario[id] = valor === null ? null : { ...estado.fichaAtual.inventario[id], materialQuantidade: valor };
         });
     });
     if (!Object.keys(atualizacoesInventario).length) return;
@@ -9501,7 +9501,7 @@ async function excluirEntidadeAtual() {
         // mesmo comportamento de removerArmaDoVeiculo.
         const armasOrfas = itensArmaInstaladosEmVeiculo(estado.fichaAtual.inventario, id);
         for (const arma of armasOrfas) {
-            estado.fichaAtual.inventario[arma.id] = { ...fichaAtual.inventario[arma.id], instaladoEmVeiculoId: null, slotVeiculo: null };
+            estado.fichaAtual.inventario[arma.id] = { ...estado.fichaAtual.inventario[arma.id], instaladoEmVeiculoId: null, slotVeiculo: null };
             await update(ref(db, `${caminhoBase()}/inventario/${arma.id}`), { instaladoEmVeiculoId: null, slotVeiculo: null });
         }
     }
@@ -9520,7 +9520,7 @@ async function destravarItensDeDentro(containerId) {
     const filhos = itensDentroDe(estado.fichaAtual, containerId);
     if (!filhos.length) return;
     const atualizacoes = {};
-    filhos.forEach(f => { atualizacoes[f.id] = { ...fichaAtual.inventario[f.id], dentroDe: null }; });
+    filhos.forEach(f => { atualizacoes[f.id] = { ...estado.fichaAtual.inventario[f.id], dentroDe: null }; });
     Object.assign(estado.fichaAtual.inventario, atualizacoes);
     const payload = {};
     filhos.forEach(f => { payload[`${f.id}/dentroDe`] = null; });
