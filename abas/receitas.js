@@ -408,7 +408,7 @@ export async function resolverCriacaoReceita(receita, escolhas, bonusQualidade, 
         if (quantidadeGasta <= 0) return;
         const { atualizacoes } = planejarConsumoMaterial(gruposOrdenados, quantidadeGasta);
         Object.entries(atualizacoes).forEach(([id, valor]) => {
-            atualizacoesInventario[id] = valor === null ? null : { ...fichaAtual.inventario[id], materialQuantidade: valor };
+            atualizacoesInventario[id] = valor === null ? null : { ...estado.fichaAtual.inventario[id], materialQuantidade: valor };
         });
     });
 
