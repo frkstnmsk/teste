@@ -28,7 +28,7 @@
 // ---------------------------------------------------------------------
 
 import { estado } from "../estado.js";
-import { el, toast, idAtivo, agendarSalvamento, gerarIdLocal, rolarERegistrar } from "../ficha.js?v=20260830-npcnivelpv";
+import { el, toast, idAtivo, agendarSalvamento, gerarIdLocal, rolarERegistrar, nomeDeFicha } from "../ficha.js?v=20260830-npcnivelpv";
 import { renderizarDeterminacoes } from "./determinacoes.js";
 import { renderizarNotas } from "./notas.js";
 import { modificadorDarknet, sortearItemPorResultado } from "../regras.js";

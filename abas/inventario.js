@@ -48,7 +48,7 @@ import {
     lerEfeitosMedicosDoModal, lerModificadoresDoModal, lerPericiaUsoDoModal, lerPesoVolumeEQuantidadeDoModal,
     lerReducaoDanoDoModal, lerSaldoDoItemDoModal, montarListaCompartimentos, montarListaEfeitosMedicos,
     montarModificacoesArma, montarReducaoDanoChecklist, popularSelectSubtipoPorte,
-    recalcularQuimicoAutoPreenchido, renderizarLinhasMateriaisQuimico
+    recalcularQuimicoAutoPreenchido, renderizarLinhasMateriaisQuimico, modificadoresAtuais
 } from "../ficha.js?v=20260830-npcnivelpv";
 import { ref, get, update, remove } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 import { db } from "../firebase-config.js";
@@ -76,13 +76,16 @@ import {
     penalidadeEsquivarContraForcaBruta, qualidadesDoMaterial, sortearLocalDetalhado,
     tagExigeCapacidadeCarregador, tagExigeClasseProtecao, tagExigeLocalProtegido, tagExigePericiaUso,
     tagExigeQuantidadeProjetil, tagPermiteLimiteRolagemPorNivel, tagPodeReduzirDano, tagTemNivel,
-    tagTemPericiaUso, tagTemQuantidadeGeral, tagUsaCalibreEspecifico
+    tagTemPericiaUso, tagTemQuantidadeGeral, tagUsaCalibreEspecifico,
+    EXPLOSIVOS_PADRAO, MODULOS_DETONACAO, MATERIAIS_CRIACAO, SUBTIPOS_IMPLANTE,
+    ESCALAS_ARMA, PERICIAS_ARMA_BRANCA, PERICIAS_FERRAMENTA_CRIACAO,
 } from "../dados-manual.js";
 import {
     modificadoresQueAfetam, tomadaSlotsOcupados, chipEstaAtivo, atributoDefesaPorPericia,
     calcularDanoDesarmado, calcularDanoTotalArma, calcularDerivados, calcularDificuldadeArmaFogo,
     calcularDificuldadeDefesaJogador, chanceFeridaPorDano, coletarModificadores,
-    deveTestarSangramentoProfundo, golpeDilacera, somaModificadoresPara, rolarD20
+    deveTestarSangramentoProfundo, golpeDilacera, somaModificadoresPara, rolarD20,
+    DIFICULDADE_BASE_DESMAIO, dificuldadeDesmaio
 } from "../regras.js";
 import { normalizarFicha } from "../normalizacao.js?v=20260822-fixhistorico";
 import { registrarRolagem } from "../calendario.js";
