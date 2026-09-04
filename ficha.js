@@ -2495,7 +2495,7 @@ export async function carregarCarregador(carregadorId, carregadorItem) {
     if (!candidatos.length) { toast("Não há projéteis desse calibre no inventário.", "erro"); return; }
 
     const projeteisCarregados = (cfg.projeteisCarregados || []).map(p => ({ ...p }));
-    const inventarioAtualizado = { ...fichaAtual.inventario };
+    const inventarioAtualizado = { ...estado.fichaAtual.inventario };
     let carregouAlgo = false;
 
     for (const proj of candidatos) {
@@ -2576,7 +2576,7 @@ async function recarregarArmaSemCarregador(armaId, armaItem) {
     if (!candidatos.length) { toast("Não há projéteis desse calibre soltos no inventário.", "erro"); return; }
 
     const projeteisCarregados = (cfg.projeteisCarregados || []).map(p => ({ ...p }));
-    const inventarioAtualizado = { ...fichaAtual.inventario };
+    const inventarioAtualizado = { ...estado.fichaAtual.inventario };
     let carregouAlgo = false;
 
     for (const proj of candidatos) {
@@ -5807,7 +5807,7 @@ async function consumirMateriaisVeiculo(materiais) {
         const grupos = [...gruposMaterialQualificadosVeiculo(m.material, m.qualidade)].reverse();
         const { atualizacoes } = planejarConsumoMaterial(grupos, Number(m.quantidade) || 0);
         Object.entries(atualizacoes).forEach(([id, valor]) => {
-            atualizacoesInventario[id] = valor === null ? null : { ...fichaAtual.inventario[id], materialQuantidade: valor };
+            atualizacoesInventario[id] = valor === null ? null : { ...estado.fichaAtual.inventario[id], materialQuantidade: valor };
         });
     });
     if (!Object.keys(atualizacoesInventario).length) return;
@@ -9520,7 +9520,7 @@ async function destravarItensDeDentro(containerId) {
     const filhos = itensDentroDe(estado.fichaAtual, containerId);
     if (!filhos.length) return;
     const atualizacoes = {};
-    filhos.forEach(f => { atualizacoes[f.id] = { ...fichaAtual.inventario[f.id], dentroDe: null }; });
+    filhos.forEach(f => { atualizacoes[f.id] = { ...estado.fichaAtual.inventario[f.id], dentroDe: null }; });
     Object.assign(estado.fichaAtual.inventario, atualizacoes);
     const payload = {};
     filhos.forEach(f => { payload[`${f.id}/dentroDe`] = null; });
