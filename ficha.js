@@ -2403,7 +2403,7 @@ async function descontarProjetilDiretoDoEstoque(calibreArma) {
         // senão o item fica com o volume "congelado" no valor de antes do
         // disparo, superestimando o quanto ele ocupa (ex.: num recipiente).
         const volumeAtualizado = Math.floor((Number(proj.volumeUnitario) || 0) * restante);
-        estado.fichaAtual.inventario[proj.id] = { ...fichaAtual.inventario[proj.id], projetil: atualizado, volume: volumeAtualizado };
+        estado.fichaAtual.inventario[proj.id] = { ...estado.fichaAtual.inventario[proj.id], projetil: atualizado, volume: volumeAtualizado };
         await update(ref(db, `${caminhoBase()}/inventario/${proj.id}`), { projetil: atualizado, volume: volumeAtualizado });
     } else {
         // update() só apaga uma chave se ela vier explicitamente como null
@@ -9501,7 +9501,7 @@ async function excluirEntidadeAtual() {
         // mesmo comportamento de removerArmaDoVeiculo.
         const armasOrfas = itensArmaInstaladosEmVeiculo(estado.fichaAtual.inventario, id);
         for (const arma of armasOrfas) {
-            estado.fichaAtual.inventario[arma.id] = { ...fichaAtual.inventario[arma.id], instaladoEmVeiculoId: null, slotVeiculo: null };
+            estado.fichaAtual.inventario[arma.id] = { ...estado.fichaAtual.inventario[arma.id], instaladoEmVeiculoId: null, slotVeiculo: null };
             await update(ref(db, `${caminhoBase()}/inventario/${arma.id}`), { instaladoEmVeiculoId: null, slotVeiculo: null });
         }
     }
