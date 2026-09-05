@@ -421,11 +421,33 @@ export function criarLiItem(id, it, { categorias, modificadoresPlanos, nivel }) 
 
     if (nivel > 0) li.classList.add("entity-item-aninhado");
 
+    // Antes, todo detalhe do item (tag, peso, volume, calibre, munição,
+    // classe de proteção etc.) virava uma string só, separada por
+    // " · " — ao passar o mouse aparecia um bloco de texto corrido,
+    // difícil de escanear pra achar o dado específico que se quer.
+    // Agora cada pedaço vira um "chip" próprio (fundo, borda, respiro),
+    // fácil de ler individualmente — e a descrição do item (antes só
+    // visível dentro do modal de editar) ganha seu próprio bloco,
+    // destacado da lista de chips.
+    const detalhesTexto = `${tagLabel} · ${it.peso || 0} kg · Volume: ${it.volume || 0}${quantidadeLabel} · ${periciaLabel}${saldoLabel}${classeLabel}${calibreLabel}${localProtegidoLabel}${reducaoLabel}${carregadorLabel}${projetilLabel}${carregadorAnexadoLabel}${camaraLabel}${containerLabel}${chaveLabel}${implanteInfoLabel}${avisoArmarSemCenarioLabel}`;
+    const chipsDetalhesHtml = detalhesTexto
+        .split(" · ")
+        .map(t => t.trim())
+        .filter(Boolean)
+        .map(t => `<span class="chip-detalhe">${t}</span>`)
+        .join("");
+    const descricaoHtml = it.descricao
+        ? `<p class="entity-descricao-texto">${escapeHtml(it.descricao).replace(/\n/g, "<br>")}</p>`
+        : "";
+
     li.innerHTML = `
         ${it.imagem ? `<img class="entity-thumb" src="${escapeHtml(it.imagem)}" alt="">` : ""}
         <div class="entity-main" ${tooltipCarregador ? `title="${escapeHtml(tooltipCarregador)}"` : ""}>
             <span class="entity-nome">${ehContainerItem ? `<button type="button" class="btn-toggle-container" title="${containerAberto ? "Recolher" : "Expandir e ver o que tem guardado dentro"}">${containerAberto ? "▾" : "▸"}</button> 🎒 ` : ""}${escapeHtml(it.nome)}</span>
-            <span class="entity-sub">${tagLabel} · ${it.peso || 0} kg · Volume: ${it.volume || 0}${quantidadeLabel}${periciaLabel}${saldoLabel}${classeLabel}${calibreLabel}${localProtegidoLabel}${reducaoLabel}${carregadorLabel}${projetilLabel}${carregadorAnexadoLabel}${camaraLabel}${containerLabel}${chaveLabel}${implanteInfoLabel}${avisoArmarSemCenarioLabel}</span>
+            <div class="entity-sub">
+                <div class="entity-detalhes-chips">${chipsDetalhesHtml}</div>
+                ${descricaoHtml}
+            </div>
         </div>
         <div class="entity-badges">
             ${armaEstaCarregadaItem ? `<span class="mod-pill positivo" title="${semCarregador ? "Tem munição carregada no tambor/câmara" : "Tem um carregador anexado"}">🔵 Carregada</span>` : ""}
