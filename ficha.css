@@ -1178,9 +1178,6 @@
    não ocupar espaço permanente no card — especialmente importante no
    celular, onde cada linha extra custa caro. */
 .entity-list .entity-sub {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--text-dim);
     max-height: 0;
     opacity: 0;
     overflow: hidden;
@@ -1189,8 +1186,46 @@
 .entity-list li:hover .entity-sub,
 .entity-list li:focus-within .entity-sub,
 .entity-list li.entity-sub-fixa .entity-sub {
-    max-height: 120px;
+    max-height: 260px;
     opacity: 1;
+    overflow-y: auto;
+}
+/* Cada detalhe do item (tag, peso, volume, calibre, munição, classe de
+   proteção etc.) era uma string só separada por " · " — um bloco de
+   texto corrido difícil de escanear. Agora cada um vira um "chip"
+   próprio, com fundo e respiro, fácil de achar de relance. */
+.entity-list .entity-detalhes-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    padding-top: 2px;
+}
+.entity-list .chip-detalhe {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.09);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    line-height: 1.5;
+    color: var(--text-dim);
+    white-space: nowrap;
+}
+/* Descrição do item (antes só visível dentro do modal de editar):
+   texto corrido normal, com quebra de linha de verdade, separado
+   visualmente dos chips por uma linha tracejada — fica claro que é
+   prosa livre e não mais um dado mecânico do item. */
+.entity-list .entity-descricao-texto {
+    margin: 6px 0 0;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(255,255,255,0.12);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-style: italic;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.62);
+    white-space: normal;
 }
 /* Em telas touch (celular/tablet) não existe hover de verdade — e tocar
    no item já abre o modal de edição antes de dar tempo de "passar o
@@ -1200,8 +1235,9 @@
    original do hover. */
 @media (hover: none) {
     .entity-list .entity-sub {
-        max-height: 120px;
+        max-height: 260px;
         opacity: 1;
+        overflow-y: auto;
     }
 }
 .entity-list .entity-badges {
