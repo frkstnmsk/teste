@@ -828,7 +828,10 @@ input[type="number"].darknet-credencial-pontuacao-input {
    espremendo o nome do item pra quase 0px — era o pior caso visual do
    bug relatado. */
 input[type="number"].darknet-item-venda-valor {
-    width: 80px;
+    /* 80px cortava valores de 5+ dígitos (ex. "11111" virava "1111").
+       110px dá espaço confortável até uns 7-8 dígitos com a fonte
+       monoespaçada, igual ao form de novo item logo abaixo. */
+    width: 110px;
     flex-shrink: 0;
 }
 .darknet-item-venda-tipo {
@@ -855,7 +858,10 @@ input[type="number"].darknet-item-venda-valor {
     min-width: 0;
 }
 .darknet-form-item-venda input:nth-child(2) {
-    width: 80px;
+    /* Mesma largura do campo de valor acima (darknet-item-venda-valor),
+       senão o número digitado aqui cabe mas, ao virar item salvo, o
+       campo do card fica mais estreito e corta o mesmo valor. */
+    width: 110px;
     flex-shrink: 0;
 }
 .darknet-form-item-venda select {
