@@ -10559,7 +10559,16 @@ function configurarDrawerPendentes() {
     // bloqueando o resto da tela.
     document.addEventListener("click", (e) => {
         if (!el.drawerPendentes.classList.contains("aberto")) return;
-        if (el.drawerPendentes.contains(e.target) || el.btnPendentesLateral.contains(e.target)) return;
+        // Usa composedPath() em vez de .contains(e.target): ao Confirmar/
+        // Rejeitar uma ação, o Firebase re-renderiza a gaveta (recria os
+        // cards) ainda durante o bubbling deste mesmo clique — e.target
+        // vira um nó órfão, fazendo .contains() achar (errado) que o
+        // clique foi "fora" e fechando a gaveta sozinha. composedPath()
+        // guarda o caminho de onde o clique realmente aconteceu, no
+        // instante em que aconteceu, então continua correto mesmo se o
+        // elemento já tiver sido removido do DOM.
+        const caminho = e.composedPath();
+        if (caminho.includes(el.drawerPendentes) || caminho.includes(el.btnPendentesLateral)) return;
         fechar();
     });
 }
