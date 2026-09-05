@@ -439,6 +439,13 @@ export function criarLiItem(id, it, { categorias, modificadoresPlanos, nivel }) 
     const descricaoHtml = it.descricao
         ? `<p class="entity-descricao-texto">${escapeHtml(it.descricao).replace(/\n/g, "<br>")}</p>`
         : "";
+    // "Editar" só aparece pro Mestre — jogador não tem mais como abrir o
+    // modal de edição clicando no item (ver mudança no li.addEventListener
+    // "click" logo abaixo: clicar agora expande/recolhe o card em vez de
+    // abrir o modal direto).
+    const btnEditarHtml = estado.isMestre
+        ? `<button type="button" class="btn-editar-item-expandido btn-ghost">✏️ Editar item</button>`
+        : "";
 
     li.innerHTML = `
         ${it.imagem ? `<img class="entity-thumb" src="${escapeHtml(it.imagem)}" alt="">` : ""}
@@ -447,6 +454,7 @@ export function criarLiItem(id, it, { categorias, modificadoresPlanos, nivel }) 
             <div class="entity-sub">
                 <div class="entity-detalhes-chips">${chipsDetalhesHtml}</div>
                 ${descricaoHtml}
+                ${btnEditarHtml}
             </div>
         </div>
         <div class="entity-badges">
@@ -793,8 +801,16 @@ export function criarLiItem(id, it, { categorias, modificadoresPlanos, nivel }) 
 
     li.addEventListener("click", (e) => {
         e.stopPropagation();
-        abrirModalEdicao("inventario", id);
+        li.classList.toggle("entity-item-expandido");
     });
+
+    const btnEditarExpandido = li.querySelector(".btn-editar-item-expandido");
+    if (btnEditarExpandido) {
+        btnEditarExpandido.addEventListener("click", (e) => {
+            e.stopPropagation();
+            abrirModalEdicao("inventario", id);
+        });
+    }
 
     // Prévia flutuante da imagem em tamanho maior, seguindo o mouse
     // (ver ativarPreviewFlutuanteImagem) — só faz sentido com mouse de
