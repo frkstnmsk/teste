@@ -1027,8 +1027,21 @@ function alternarCardCredencialDarknet(site, credencial, card) {
 // (plano-darknet-passo9.txt, Parte 5) — os demais sites continuam sem
 // dificuldade, só o número mesmo.
 async function rolarDarknet(site, credencial) {
-    const mod = modificadorDarknet(site.id, credencial);
-    const nomeCred = credencial.nome ? ` — ${credencial.nome}` : "";
+    // O botão de rolar é criado só uma vez, em criarCardCredencialDarknet,
+    // com a "credencial" que existia naquele momento — mas o Firebase
+    // troca estado.fichaAtual inteiro a cada sincronização (ver
+    // ficha.js:normalizarFicha), então esse objeto capturado no clique vai
+    // ficando pra trás sempre que a pontuação/avaliação/status muda sem
+    // mudar a QUANTIDADE de credenciais do site (que é o único caso em
+    // que o card é recriado do zero — ver renderizarCredenciaisDarknet).
+    // O card seguia mostrando o modificador certo (badge/resumo são
+    // atualizados à parte, com dado fresco), mas a rolagem em si usava o
+    // valor antigo — por isso o dado saía com +0 mesmo com +1 aparecendo
+    // na tela. Busca a credencial atual pelo id antes de calcular/rolar,
+    // mesmo padrão já usado em removerItemVendaDarknet/adicionarItemVendaDarknet.
+    const credencialAtual = credenciaisDoSite(site.id).find(c => c.id === credencial.id) || credencial;
+    const mod = modificadorDarknet(site.id, credencialAtual);
+    const nomeCred = credencialAtual.nome ? ` — ${credencialAtual.nome}` : "";
     const nomeAlvo = `${site.nome}${nomeCred}`;
 
     if (!DARKNET_SITES_ITENS.includes(site.id)) {
@@ -1040,7 +1053,7 @@ async function rolarDarknet(site, credencial) {
     if (!resultadoRolagem) return; // ação bloqueada (ex.: fora do turno em combate)
     if (!resultadoRolagem.sucesso) return; // falhou na dificuldade base, sem sorteio
 
-    const itens = Array.isArray(credencial.itens) ? credencial.itens : [];
+    const itens = Array.isArray(credencialAtual.itens) ? credencialAtual.itens : [];
     if (itens.length === 0) {
         toast(`${nomeAlvo}: sucesso, mas nenhum item cadastrado pra sortear.`, "erro");
         return;

@@ -646,7 +646,13 @@
     font-size: 0.76rem;
     color: var(--text-dim);
 }
-.darknet-credencial-pontuacao-input {
+/* input[type="number"] junto com a classe pra ganhar de propósito da
+   regra genérica "input[type=\"number\"] { width:100% }" do style.css —
+   só ".darknet-credencial-pontuacao-input" sozinho tem especificidade
+   menor que essa regra genérica (que tem o atributo [type] a mais) e
+   perdia, fazendo esse input (Pontuação do P2K / Status do P2C) esticar
+   pra 100% de largura em vez de ficar com os 70px pretendidos. */
+input[type="number"].darknet-credencial-pontuacao-input {
     width: 70px;
     flex-shrink: 0;
 }
@@ -815,7 +821,13 @@
     flex: 1;
     min-width: 0;
 }
-.darknet-item-venda-valor {
+/* Mesmo motivo do comentário em darknet-credencial-pontuacao-input:
+   precisa do input[type="number"] junto pra ganhar da regra genérica
+   de largura 100% do style.css. Sem isso esse campo (valor do item,
+   ex. o "8" do BlackPrint/P2C) virava o campo mais largo da linha,
+   espremendo o nome do item pra quase 0px — era o pior caso visual do
+   bug relatado. */
+input[type="number"].darknet-item-venda-valor {
     width: 80px;
     flex-shrink: 0;
 }

@@ -32,7 +32,7 @@ import { ref, set, get } from "https://www.gstatic.com/firebasejs/12.15.0/fireba
 const MESTRES = [
     { login: "frkstnmsk", senha: "31outcaseri", mesaId: "frkstnmsk", mesaNome: "77³" },
     { login: "yan", senha: "ian", mesaId: "yan", mesaNome: "Mesa do Yan" },
-    { login: "cyberpunk", senha: "31outcaseri", mesaId: "cyberpunk", mesaNome: "isso não é cyberpunk" },
+    { login: "cyberpunk", senha: "cyberpunk", mesaId: "cyberpunk", mesaNome: "isso não é cyberpunk" },
     { login: "lukethemaster", senha: "@master556", mesaId: "lukethemaster", mesaNome: "luke" }
 ];
 
