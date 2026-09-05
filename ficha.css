@@ -1240,6 +1240,38 @@
         overflow-y: auto;
     }
 }
+/* Clicar no item (abas/inventario.js: li.addEventListener("click", ...))
+   alterna esta classe — vira um "acordeão" clicável, maior e mais
+   destacado que a simples prévia de hover, com o botão Editar (só
+   Mestre) dentro. Sobrescreve o hover normal para ficar consistente
+   mesmo tirando o mouse de cima depois de clicar. */
+.entity-list li.entity-item-expandido {
+    background: rgba(255,255,255,0.045);
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.09);
+}
+.entity-list li.entity-item-expandido .entity-sub {
+    max-height: 600px;
+    opacity: 1;
+    overflow-y: auto;
+    padding: 8px 4px 4px;
+}
+.entity-list li.entity-item-expandido .entity-detalhes-chips {
+    gap: 6px 8px;
+}
+.entity-list li.entity-item-expandido .chip-detalhe {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+}
+.entity-list li.entity-item-expandido .entity-descricao-texto {
+    font-size: 0.85rem;
+}
+.entity-list .btn-editar-item-expandido {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.72rem;
+    padding: 5px 12px;
+}
 .entity-list .entity-badges {
     display: flex;
     gap: 6px;
