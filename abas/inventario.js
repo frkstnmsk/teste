@@ -32,7 +32,7 @@
 
 import { estado } from "../estado.js";
 import {
-    el, toast, escapeHtml, textoDetalhamento, abrirModalEdicao, caminhoBase,
+    el, toast, escapeHtml, textoDetalhamento, abrirModalEdicao, abrirModalNovo, caminhoBase,
     alternarAtivoEntidade, alternarEquipadaItem, armaUsaCarregador,
     carregarCarregador, recarregarArma, retirarCarregadorArma, carregarCamaraArma,
     iniciarUsoItem, abrirModalDarItem, cenarioAtualDoPersonagem,
@@ -92,10 +92,15 @@ import { registrarRolagem } from "../calendario.js";
 import { caminhoMesa } from "../mesa.js";
 import { criarFerida } from "../saude.js";
 import { calcularSecundariosNpc } from "../npc-detalhado.js";
-import { salvarItemNoBanco } from "../itens-globais.js";
+import { salvarItemNoBanco, buscarItensGlobaisPorNome } from "../itens-globais.js";
 
 // ---------------------------------------------------------------------
 export function renderizarInventario(modificadoresPlanos) {
+    // "Solicitar item" (ver configurarSolicitarItem abaixo) é só pro
+    // jogador — o Mestre já usa "+ Adicionar item" direto, sem precisar
+    // de aprovação de ninguém.
+    el.btnSolicitarItem.style.display = estado.isMestre ? "none" : "inline-block";
+
     const carga = calcularCargaAtual(estado.fichaAtual, modificadoresPlanos);
     const pct = Math.round(carga.percentual);
     let avisoPenalidade = "";
@@ -421,11 +426,41 @@ export function criarLiItem(id, it, { categorias, modificadoresPlanos, nivel }) 
 
     if (nivel > 0) li.classList.add("entity-item-aninhado");
 
+    // Antes, todo detalhe do item (tag, peso, volume, calibre, munição,
+    // classe de proteção etc.) virava uma string só, separada por
+    // " · " — ao passar o mouse aparecia um bloco de texto corrido,
+    // difícil de escanear pra achar o dado específico que se quer.
+    // Agora cada pedaço vira um "chip" próprio (fundo, borda, respiro),
+    // fácil de ler individualmente — e a descrição do item (antes só
+    // visível dentro do modal de editar) ganha seu próprio bloco,
+    // destacado da lista de chips.
+    const detalhesTexto = `${tagLabel} · ${it.peso || 0} kg · Volume: ${it.volume || 0}${quantidadeLabel} · ${periciaLabel}${saldoLabel}${classeLabel}${calibreLabel}${localProtegidoLabel}${reducaoLabel}${carregadorLabel}${projetilLabel}${carregadorAnexadoLabel}${camaraLabel}${containerLabel}${chaveLabel}${implanteInfoLabel}${avisoArmarSemCenarioLabel}`;
+    const chipsDetalhesHtml = detalhesTexto
+        .split(" · ")
+        .map(t => t.trim())
+        .filter(Boolean)
+        .map(t => `<span class="chip-detalhe">${t}</span>`)
+        .join("");
+    const descricaoHtml = it.descricao
+        ? `<p class="entity-descricao-texto">${escapeHtml(it.descricao).replace(/\n/g, "<br>")}</p>`
+        : "";
+    // "Editar" só aparece pro Mestre — jogador não tem mais como abrir o
+    // modal de edição clicando no item (ver mudança no li.addEventListener
+    // "click" logo abaixo: clicar agora expande/recolhe o card em vez de
+    // abrir o modal direto).
+    const btnEditarHtml = estado.isMestre
+        ? `<button type="button" class="btn-editar-item-expandido btn-ghost">✏️ Editar item</button>`
+        : "";
+
     li.innerHTML = `
         ${it.imagem ? `<img class="entity-thumb" src="${escapeHtml(it.imagem)}" alt="">` : ""}
         <div class="entity-main" ${tooltipCarregador ? `title="${escapeHtml(tooltipCarregador)}"` : ""}>
             <span class="entity-nome">${ehContainerItem ? `<button type="button" class="btn-toggle-container" title="${containerAberto ? "Recolher" : "Expandir e ver o que tem guardado dentro"}">${containerAberto ? "▾" : "▸"}</button> 🎒 ` : ""}${escapeHtml(it.nome)}</span>
-            <span class="entity-sub">${tagLabel} · ${it.peso || 0} kg · Volume: ${it.volume || 0}${quantidadeLabel}${periciaLabel}${saldoLabel}${classeLabel}${calibreLabel}${localProtegidoLabel}${reducaoLabel}${carregadorLabel}${projetilLabel}${carregadorAnexadoLabel}${camaraLabel}${containerLabel}${chaveLabel}${implanteInfoLabel}${avisoArmarSemCenarioLabel}</span>
+            <div class="entity-sub">
+                <div class="entity-detalhes-chips">${chipsDetalhesHtml}</div>
+                ${descricaoHtml}
+                ${btnEditarHtml}
+            </div>
         </div>
         <div class="entity-badges">
             ${armaEstaCarregadaItem ? `<span class="mod-pill positivo" title="${semCarregador ? "Tem munição carregada no tambor/câmara" : "Tem um carregador anexado"}">🔵 Carregada</span>` : ""}
@@ -771,8 +806,16 @@ export function criarLiItem(id, it, { categorias, modificadoresPlanos, nivel }) 
 
     li.addEventListener("click", (e) => {
         e.stopPropagation();
-        abrirModalEdicao("inventario", id);
+        li.classList.toggle("entity-item-expandido");
     });
+
+    const btnEditarExpandido = li.querySelector(".btn-editar-item-expandido");
+    if (btnEditarExpandido) {
+        btnEditarExpandido.addEventListener("click", (e) => {
+            e.stopPropagation();
+            abrirModalEdicao("inventario", id);
+        });
+    }
 
     // Prévia flutuante da imagem em tamanho maior, seguindo o mouse
     // (ver ativarPreviewFlutuanteImagem) — só faz sentido com mouse de
@@ -1815,6 +1858,116 @@ export async function resolverAtaque(it, modificadoresPlanosAtacante, participan
 
     await registrarRolagem({ quem: nomeAtacante, modificador: modAtaque, resultado: resultadoDano.danoFinal, detalhe: detalheDano, critico: criticoPositivo ? "acerto" : null });
     toast(detalheDano, criticoPositivo ? "critico-acerto" : "ok");
+}
+
+// ---------------------------------------------------------------------
+// "Solicitar item" — jogador escolhe um item do Banco Global (ou cria um
+// novo lá, se ainda não existir) e manda um pedido pra fila de Ações
+// Pendentes; o Mestre só aprova/rejeita (ver "solicitar_item" em
+// mestre.js e o botão "Inspecionar item" em mestre/acoes-pendentes.js).
+// Painel simples, à parte do modal genérico de entidade — só busca +
+// selecionar + escolher categoria de destino.
+// ---------------------------------------------------------------------
+let itemBancoSelecionadoParaSolicitar = null;
+
+function popularCategoriaSolicitarItem() {
+    if (!estado.fichaAtual) return;
+    const escolhaAnterior = el.solicitarItemCategoria.value;
+    const categorias = listaCategorias(estado.fichaAtual);
+    el.solicitarItemCategoria.innerHTML = categorias.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.nome)}</option>`).join("");
+    if (categorias.some(c => c.id === escolhaAnterior)) el.solicitarItemCategoria.value = escolhaAnterior;
+}
+
+function resetarPainelSolicitarItem() {
+    itemBancoSelecionadoParaSolicitar = null;
+    el.solicitarItemBusca.value = "";
+    el.solicitarItemOpcoes.style.display = "none";
+    el.solicitarItemOpcoes.innerHTML = "";
+    el.solicitarItemSelecionadoHint.style.display = "none";
+    el.solicitarItemInspecionar.disabled = true;
+    el.solicitarItemEnviar.disabled = true;
+}
+
+export function configurarSolicitarItem() {
+    el.btnSolicitarItem.addEventListener("click", () => {
+        const abrir = el.painelSolicitarItem.style.display === "none";
+        el.painelSolicitarItem.style.display = abrir ? "block" : "none";
+        if (abrir) { popularCategoriaSolicitarItem(); resetarPainelSolicitarItem(); }
+    });
+
+    el.solicitarItemCancelar.addEventListener("click", () => {
+        el.painelSolicitarItem.style.display = "none";
+        resetarPainelSolicitarItem();
+    });
+
+    el.solicitarItemBusca.addEventListener("input", () => {
+        itemBancoSelecionadoParaSolicitar = null;
+        el.solicitarItemInspecionar.disabled = true;
+        el.solicitarItemEnviar.disabled = true;
+        el.solicitarItemSelecionadoHint.style.display = "none";
+        const encontrados = buscarItensGlobaisPorNome(estado.itensGlobaisCache, el.solicitarItemBusca.value);
+        el.solicitarItemOpcoes.innerHTML = "";
+        if (!encontrados.length) {
+            el.solicitarItemOpcoes.style.display = el.solicitarItemBusca.value.trim() ? "block" : "none";
+            if (el.solicitarItemBusca.value.trim()) {
+                el.solicitarItemOpcoes.innerHTML = `<div class="opcao-vazia">Nenhum item encontrado — clique em "+ Criar novo item no Banco" se ele ainda não existe.</div>`;
+            }
+            return;
+        }
+        encontrados.forEach(it => {
+            const div = document.createElement("div");
+            div.className = "opcao";
+            div.innerText = `${it.nome} — ${rotuloTag(it.tag)}${it.peso ? ` · ${it.peso} kg` : ""}`;
+            div.addEventListener("click", () => {
+                itemBancoSelecionadoParaSolicitar = it;
+                el.solicitarItemBusca.value = it.nome;
+                el.solicitarItemOpcoes.style.display = "none";
+                el.solicitarItemInspecionar.disabled = false;
+                el.solicitarItemEnviar.disabled = false;
+                el.solicitarItemSelecionadoHint.style.display = "block";
+                el.solicitarItemSelecionadoHint.innerHTML = `Selecionado: <strong>${escapeHtml(it.nome)}</strong> (${escapeHtml(rotuloTag(it.tag))}${it.nivelTag ? `, nível ${it.nivelTag}` : ""})`;
+            });
+            el.solicitarItemOpcoes.appendChild(div);
+        });
+        el.solicitarItemOpcoes.style.display = "block";
+    });
+
+    el.solicitarItemInspecionar.addEventListener("click", () => {
+        if (!itemBancoSelecionadoParaSolicitar) return;
+        abrirModalEdicao("itensGlobais", itemBancoSelecionadoParaSolicitar.id);
+    });
+
+    // "+ Criar novo item no Banco" — abre o mesmo modal completo de item
+    // (tag, peso, perícia, dano etc.) que o Mestre usa na Biblioteca, só
+    // que agora liberado pro jogador criar (nunca editar — ver
+    // abrirModalNovo/salvarItemBancoDoModal em ficha.js). Depois de
+    // salvo, o jogador busca o nome de novo aqui pra selecionar e enviar
+    // o pedido.
+    el.solicitarItemCriarNovo.addEventListener("click", () => {
+        abrirModalNovo("itensGlobais");
+    });
+
+    el.solicitarItemEnviar.addEventListener("click", async () => {
+        if (!estado.fichaAtual || !estado.fichaAtualId || estado.isMestre) return;
+        if (!itemBancoSelecionadoParaSolicitar) { toast("Escolha um item do Banco Global primeiro.", "erro"); return; }
+        const categoriaDestino = el.solicitarItemCategoria.value || "levando";
+        const nomeCategoriaDestino = nomeCategoria(estado.fichaAtual, categoriaDestino);
+        const nomeJogador = estado.fichaAtual?.config?.nomeExibicao || estado.sessao?.nome || estado.fichaAtualId;
+        await criarAcaoPendente({
+            tipo: "solicitar_item",
+            fichaId: estado.fichaAtualId,
+            nomeJogador,
+            detalhe: `${nomeJogador} está solicitando o item "${itemBancoSelecionadoParaSolicitar.nome}" (pra "${nomeCategoriaDestino}").`,
+            payload: {
+                itemGlobalId: itemBancoSelecionadoParaSolicitar.id,
+                itemNome: itemBancoSelecionadoParaSolicitar.nome,
+                categoriaDestino
+            }
+        });
+        toast("Pedido de item enviado ao Mestre.");
+        el.painelSolicitarItem.style.display = "none";
+        resetarPainelSolicitarItem();
+    });
 }
 
 export function configurarDarItem() {

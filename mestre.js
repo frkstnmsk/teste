@@ -25,6 +25,7 @@ import { normalizarFicha } from "./normalizacao.js?v=20260822-fixhistorico";
 import { PERICIAS_ARMA_BRANCA, ehDanoPerfurante, ehDanoCortante, ehDanoContundente, bonusCobraKaiIniciativa, ehIdSaldoDeItem, idItemDoSaldo, campoSaldoDoItem, ehContainer, diferencaClasseCalibreVsColete, bairroPerseguicao, sortearLocalDetalhado, arredondarMoeda } from "./dados-manual.js";
 import { itemCabeNoContainer, itemPodeSerLevadoSolto, resolverEntradaLevandoConsigo } from "./inventario.js";
 import { criarFerida, resolverFimSangramentoNatural } from "./saude.js";
+import { buscarItemBancoPorId, autopreencherItemDoBanco } from "./itens-globais.js";
 
 // Nível de uma perícia pelo nome, direto do objeto `pericias` da ficha
 // (jogador) ou `pericias`/`periciasNpc` de um NPC — 0 se não tiver.
@@ -3298,7 +3299,7 @@ export function ouvirAcoesPendentes(callback) {
     });
 }
 
-// tipo: "remover_item" | "mover_item" | "guardar_item" | "gastar_dinheiro" | "mover_dinheiro" | "dar_item" | "pegar_item_cenario" | "melhorar_veiculo_terceiro" | "reparar_veiculo_terceiro" | "instalar_implante" | "remover_implante"
+// tipo: "remover_item" | "mover_item" | "guardar_item" | "gastar_dinheiro" | "mover_dinheiro" | "dar_item" | "pegar_item_cenario" | "melhorar_veiculo_terceiro" | "reparar_veiculo_terceiro" | "instalar_implante" | "remover_implante" | "solicitar_item" | "solicitar_dinheiro"
 export async function criarAcaoPendente({ tipo, fichaId, nomeJogador, detalhe, payload }) {
     const novaRef = push(ref(db, caminhoMesa("acoesPendentes")));
     await set(novaRef, { tipo, fichaId, nomeJogador: nomeJogador || fichaId, detalhe: detalhe || "", payload: payload || {}, criadoEm: Date.now() });
@@ -4042,6 +4043,53 @@ export async function confirmarAcaoPendente(acao, extras = {}) {
             await set(caminhoGuardadas, guardadasAtual + quantidade);
             await set(ref(db, caminhoMesa(`combateAtivo/participantes/${participanteId}/acoes`)), 0);
         }
+
+    } else if (tipo === "solicitar_item") {
+        // "Solicitar item" (ver botão na aba Inventário, abas/inventario.js):
+        // o jogador escolhe um item já cadastrado no Banco Global (ou que
+        // ele mesmo acabou de cadastrar lá, pra poder pedir) e o Mestre só
+        // aprova/rejeita — quem cria de fato o registro no inventário da
+        // ficha é aqui, na confirmação. Revalida que o item ainda existe no
+        // banco (pode ter sido excluído da Biblioteca enquanto o pedido
+        // esperava aprovação) antes de copiar o molde.
+        const itemBanco = await buscarItemBancoPorId(payload.itemGlobalId);
+        if (!itemBanco) {
+            await rejeitarAcaoPendente(acao.id);
+            throw new Error(`Pedido cancelado: "${payload.itemNome || "item"}" não existe mais no Banco Global.`);
+        }
+        const categoriaDestino = payload.categoriaDestino || "levando";
+        const itemPronto = autopreencherItemDoBanco(itemBanco, categoriaDestino);
+        // Mesma trava de "item não fica solto" usada em dar_item/mover_item/
+        // pegar_item_cenario acima: só entra em jogo quando o destino é
+        // "levando" — o item nasce sem dentroDe/mão nenhuma, então sempre
+        // passa por resolverEntradaLevandoConsigo igual um item novo
+        // entrando em "levando" pela primeira vez.
+        if (categoriaDestino === "levando") {
+            const snapInventarioSolicitar = await get(ref(db, caminhoMesa(`fichas/${fichaId}/inventario`)));
+            const fichaParaChecagemSolicitar = { inventario: snapInventarioSolicitar.exists() ? snapInventarioSolicitar.val() : {} };
+            const resultadoEntradaSolicitar = resolverEntradaLevandoConsigo(fichaParaChecagemSolicitar, itemPronto, null);
+            if (!resultadoEntradaSolicitar.ok) {
+                await rejeitarAcaoPendente(acao.id);
+                throw new Error(`Pedido cancelado: "${itemPronto.nome || "item"}" não pôde ser entregue — ${resultadoEntradaSolicitar.motivo}`);
+            }
+            itemPronto.equipada = resultadoEntradaSolicitar.equipar;
+        }
+        const novoItemRefSolicitado = push(ref(db, caminhoMesa(`fichas/${fichaId}/inventario`)));
+        await set(novoItemRefSolicitado, itemPronto);
+
+    } else if (tipo === "solicitar_dinheiro") {
+        // "Solicitar dinheiro" (ver botão na aba Finanças, abas/financas.js):
+        // o jogador já escolhe, no momento do pedido, pra qual dos PRÓPRIOS
+        // saldos o valor deve cair — o Mestre só aprova ou não o valor
+        // pedido (diferente de pegar_dinheiro_cenario/depositar_dinheiro_item
+        // acima, onde a origem é ambígua e por isso o Mestre escolhe o
+        // destino na hora de confirmar).
+        const valorSolicitado = Number(payload.valor) || 0;
+        if (valorSolicitado <= 0) {
+            await rejeitarAcaoPendente(acao.id);
+            throw new Error("Pedido cancelado: valor inválido.");
+        }
+        await creditarSaldoFicha(fichaId, payload.saldoId, valorSolicitado);
     }
 
     await remove(ref(db, caminhoMesa(`acoesPendentes/${acao.id}`)));

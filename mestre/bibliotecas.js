@@ -63,6 +63,7 @@ export function montarPainelBibliotecaItens(corpo) {
             ${it.categoriaBanco ? `<span class="hint-inline">Categoria: ${escapeHtml(it.categoriaBanco)}</span>` : ""}
             ${it.arma ? `<span>Dano base: ${it.arma.danoBase ?? 0}</span>` : ""}
             <span class="hint-inline">${escapeHtml(origem)}</span>
+            ${it.criadoPorTipo === "jogador" ? `<span class="hint-inline">💡 Sugerido por ${escapeHtml(it.criadoPorNome || "jogador")}</span>` : ""}
         `;
         const thumbHoverBanco = card.querySelector(".entity-thumb");
         if (thumbHoverBanco) ativarPreviewFlutuanteImagem(thumbHoverBanco, it.imagem);

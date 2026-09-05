@@ -24,7 +24,7 @@ import {
     despacharEfeitosQuimicos, htmlCheckboxesOcasionais, lerDeltaOcasionais,
     calcularModEsquivarParticipante, calcularModApararParticipante,
     participanteIdPorAlvo, buscarConstituicaoAlvo, combateComIniciativaAtivo,
-    criarSelectFichas,
+    criarSelectFichas, abrirModalEdicao,
     ROTULOS_ACAO_MESTRE,
 } from "../ficha.js?v=20260830-npcnivelpv";
 import { montarPainelXpMultiplo, montarPainelCondicaoMestre } from "./painel-mestre.js";
@@ -227,6 +227,17 @@ export function montarPainelAcoesPendentes(corpo) {
         const card = document.createElement("div");
         card.className = "pendente-card";
         card.innerHTML = `<span>${escapeHtml(acao.detalhe || `${acao.nomeJogador}: ${acao.tipo}`)}</span>`;
+
+        // "solicitar_item" (Solicitar item, ver botão na aba Inventário —
+        // abas/inventario.js): antes de aprovar/rejeitar, o Mestre pode
+        // abrir o item completo do Banco Global (mesmo modal de edição da
+        // Biblioteca de Itens) pra conferir todas as configurações.
+        if (acao.tipo === "solicitar_item" && acao.payload && acao.payload.itemGlobalId) {
+            const btnInspecionar = document.createElement("button");
+            btnInspecionar.className = "btn-ghost"; btnInspecionar.type = "button"; btnInspecionar.innerText = "🔍 Inspecionar item";
+            btnInspecionar.addEventListener("click", () => abrirModalEdicao("itensGlobais", acao.payload.itemGlobalId));
+            card.appendChild(btnInspecionar);
+        }
 
         // "explosao_raio" (ver detonarExplosivoCenario, mestre.js, e
         // plano-explosivos-cenario.txt Fase 4) não é um pedido pra

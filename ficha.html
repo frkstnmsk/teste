@@ -351,6 +351,21 @@
                         <button id="financas-transformar-item-btn" class="btn-ghost" type="button" title="Transforma o valor num item de dinheiro físico no inventário, em vez de gastar — pode ser dado a outro personagem depois">Transformar em item</button>
                     </div>
 
+                    <div id="financas-solicitar-bloco" style="display:none;">
+                        <div class="section-header">Solicitar dinheiro <span class="hint-inline">pedido precisa de aprovação do Mestre</span></div>
+                        <div class="grid-form grid-4">
+                            <div class="campo">
+                                <label for="financas-solicitar-destino">Pra qual saldo</label>
+                                <select id="financas-solicitar-destino"></select>
+                            </div>
+                            <div class="campo">
+                                <label for="financas-solicitar-valor">Valor</label>
+                                <input type="number" id="financas-solicitar-valor" min="0" value="0">
+                            </div>
+                        </div>
+                        <button id="financas-solicitar-btn" class="btn-lime" type="button">Solicitar dinheiro ao Mestre</button>
+                    </div>
+
                     <div id="financas-mover-bloco" style="display:none;">
                         <div class="section-header">Mover dinheiro entre saldos <span class="hint-inline">pedido precisa de aprovação do Mestre</span></div>
                         <div class="grid-form grid-4">
@@ -468,6 +483,31 @@
                     <div id="inventario-listas"></div>
 
                     <button id="btn-add-item" class="btn-lime" type="button">+ Adicionar item</button>
+                    <button id="btn-solicitar-item" class="btn-ghost" type="button" style="display:none;">📥 Solicitar item</button>
+
+                    <!-- Painel "Solicitar item" (só pro jogador — o Mestre já
+                         adiciona item direto): busca no Banco Global, escolhe
+                         onde o item vai ficar guardado e manda o pedido pra
+                         fila de Ações Pendentes. "+ Criar novo item no Banco"
+                         cobre o caso do item que o jogador quer ainda não
+                         existir no catálogo. -->
+                    <div id="painel-solicitar-item" class="modal-field" style="display:none; margin-top:10px; border: var(--border-style); padding:10px; border-radius: 2px;">
+                        <div class="section-header">Solicitar item <span class="hint-inline">pedido precisa de aprovação do Mestre</span></div>
+                        <label for="solicitar-item-busca">Buscar no Banco Global</label>
+                        <input type="text" id="solicitar-item-busca" placeholder="Digite pra buscar...">
+                        <div class="searchable-options" id="solicitar-item-opcoes" style="display:none;"></div>
+                        <p class="hint" id="solicitar-item-selecionado-hint" style="display:none;"></p>
+                        <div class="campo">
+                            <label for="solicitar-item-categoria">Onde vai ficar guardado</label>
+                            <select id="solicitar-item-categoria"></select>
+                        </div>
+                        <div class="modal-btns">
+                            <button id="solicitar-item-inspecionar" class="btn-ghost" type="button" disabled>🔍 Inspecionar</button>
+                            <button id="solicitar-item-criar-novo" class="btn-ghost" type="button">+ Criar novo item no Banco</button>
+                            <button id="solicitar-item-enviar" class="btn-lime" type="button" disabled>Enviar solicitação</button>
+                            <button id="solicitar-item-cancelar" class="btn-ghost" type="button">Cancelar</button>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- ===================== COMBATE ===================== -->

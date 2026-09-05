@@ -22,7 +22,7 @@ import {
 } from "./abas/receitas.js";
 import { renderizarDeterminacoes, configurarRolagemDeterminacoes } from "./abas/determinacoes.js";
 import { renderizarPericias, configurarBuscaPericia, configurarModalSelecionarAlvo, prepararModalPericia } from "./abas/pericias.js";
-import { renderizarInventario, criarLiItem, fecharCaixaDepositarDinheiroItem, configurarDarItem, resolverAtaque, salvarItemDoModal, atualizarCamposPorTag } from "./abas/inventario.js";
+import { renderizarInventario, criarLiItem, fecharCaixaDepositarDinheiroItem, configurarDarItem, configurarSolicitarItem, resolverAtaque, salvarItemDoModal, atualizarCamposPorTag } from "./abas/inventario.js";
 import { renderizarVeiculos, configurarFatorPrecoMateriaisVeiculo } from "./abas/veiculos.js";
 import { renderizarDarknetENotas, configurarFatorPrecoDarknet } from "./abas/darknet.js";
 import { renderizarCenarios, configurarCenarios, configurarPerseguicaoAtiva, fecharCaixaPegarDinheiroCenario, montarGerenciadorCenario } from "./abas/cenario.js";
@@ -361,12 +361,26 @@ export const el = {
     financasMoverDestino: document.getElementById("financas-mover-destino"),
     financasMoverValor: document.getElementById("financas-mover-valor"),
     financasMoverBtn: document.getElementById("financas-mover-btn"),
+    financasSolicitarBloco: document.getElementById("financas-solicitar-bloco"),
+    financasSolicitarDestino: document.getElementById("financas-solicitar-destino"),
+    financasSolicitarValor: document.getElementById("financas-solicitar-valor"),
+    financasSolicitarBtn: document.getElementById("financas-solicitar-btn"),
     financasGanhoFixo: document.getElementById("financas-ganho-fixo"),
     financasGanhoFixoSalvar: document.getElementById("financas-ganho-fixo-salvar"),
     resumoCarga: document.getElementById("resumo-carga"),
     resumoMaos: document.getElementById("resumo-maos"),
     inventarioCategoriasNav: document.getElementById("inventario-categorias-nav"),
     inventarioListas: document.getElementById("inventario-listas"),
+    btnSolicitarItem: document.getElementById("btn-solicitar-item"),
+    painelSolicitarItem: document.getElementById("painel-solicitar-item"),
+    solicitarItemBusca: document.getElementById("solicitar-item-busca"),
+    solicitarItemOpcoes: document.getElementById("solicitar-item-opcoes"),
+    solicitarItemSelecionadoHint: document.getElementById("solicitar-item-selecionado-hint"),
+    solicitarItemCategoria: document.getElementById("solicitar-item-categoria"),
+    solicitarItemInspecionar: document.getElementById("solicitar-item-inspecionar"),
+    solicitarItemCriarNovo: document.getElementById("solicitar-item-criar-novo"),
+    solicitarItemEnviar: document.getElementById("solicitar-item-enviar"),
+    solicitarItemCancelar: document.getElementById("solicitar-item-cancelar"),
     listaArmasCombate: document.getElementById("lista-armas-combate"),
     listaManobrasCombate: document.getElementById("lista-manobras-combate"),
     veiculosLista: document.getElementById("veiculos-lista"),
@@ -808,6 +822,7 @@ async function init() {
     tentarOuAvisar("recuperação de PV", configurarRecuperacaoPV);
     tentarOuAvisar("rolagem de determinações", configurarRolagemDeterminacoes);
     tentarOuAvisar("dar item", configurarDarItem);
+    tentarOuAvisar("solicitar item", configurarSolicitarItem);
     tentarOuAvisar("cache de fichas", () => {
         ouvirTodasAsFichas((todas) => { estado.todasAsFichasCache = todas || {}; });
     });
@@ -7080,10 +7095,13 @@ export function abrirModalNovo(lista) {
         toast("Selecione uma ficha (aba \"Fichas ativas\", se você for o Mestre) antes de adicionar isso.", "erro");
         return;
     }
-    if (lista === "itensGlobais" && !estado.isMestre) {
-        toast("Só o Mestre gerencia a Biblioteca de Itens.", "erro");
-        return;
-    }
+    // itensGlobais: o Mestre gerencia a Biblioteca livremente; o jogador só
+    // pode CRIAR um item novo por aqui (abrirModalNovo nunca tem id, então
+    // isso nunca vira uma edição de item alheio) — pensado pro fluxo
+    // "Solicitar item" (abas/inventario.js), quando o item que ele quer
+    // ainda não existe no banco. Editar/excluir um item já existente
+    // continua travado só pro Mestre (ver salvarItemBancoDoModal/
+    // excluirEntidadeAtual).
     if (LISTAS_CARACTERISTICA_NARRATIVA.includes(lista) && !podeEditarCaracteristicaNarrativa()) {
         toast("Só o Mestre pode adicionar isso depois da criação do personagem.", "erro");
         return;
@@ -7263,7 +7281,12 @@ function prepararModalParaLista(lista, objetoExistente) {
     // já está no inventário — características, mods e status ficam
     // travados. Ele ainda pode pedir a remoção (vira um pedido pendente
     // pro Mestre aprovar, regra 4), mas não pode editar/salvar direto.
-    const somenteLeituraItem = lista === "inventario" && !!objetoExistente && !estado.isMestre;
+    // "itensGlobais" entra na mesma trava quando o jogador está só
+    // INSPECIONANDO um item que já existe no Banco Global (ver botão
+    // "Inspecionar" no fluxo de "Solicitar item", abas/inventario.js, e no
+    // card de "Ações Pendentes" do Mestre) — objetoExistente null (criando
+    // um item novo pelo próprio jogador) continua totalmente editável.
+    const somenteLeituraItem = (lista === "inventario" || lista === "itensGlobais") && !!objetoExistente && !estado.isMestre;
     // Trava de edição de Vantagem/Desvantagem/Fato Universal (correção de
     // exploit): fora da Criação, só o Mestre edita ou remove — o jogador
     // só visualiza, sem nem a opção de pedir remoção.
@@ -7275,7 +7298,14 @@ function prepararModalParaLista(lista, objetoExistente) {
         el.modalExcluir.style.display = "none";
     } else if (somenteLeituraItem) {
         el.modalTitulo.innerText += " (somente leitura)";
-        el.modalExcluir.innerText = "Solicitar remoção";
+        if (lista === "itensGlobais") {
+            // Item do Banco Global: jogador só inspeciona, sem opção de
+            // pedir remoção (isso não existe pra Biblioteca — quem exclui
+            // um item de lá é só o Mestre, direto).
+            el.modalExcluir.style.display = "none";
+        } else {
+            el.modalExcluir.innerText = "Solicitar remoção";
+        }
     } else {
         el.modalExcluir.innerText = "Excluir";
     }
@@ -9162,7 +9192,13 @@ export function lerPesoVolumeEQuantidadeDoModal(tag) {
 // item do zero quanto pra editar um já existente.
 // ---------------------------------------------------------------------
 async function salvarItemBancoDoModal(id) {
-    if (!estado.isMestre) { toast("Só o Mestre gerencia a Biblioteca de Itens.", "erro"); return; }
+    // Editar um item JÁ EXISTENTE no Banco Global continua exclusivo do
+    // Mestre — jogador só chega aqui com id (edição) através do modal de
+    // "Inspecionar", que já é somente-leitura (ver somenteLeituraItem) e
+    // nem mostra o botão salvar; isso aqui é só a segunda trava, caso
+    // alguém force o clique de outra forma. Criar um item NOVO (sem id) é
+    // liberado pro jogador também, pra alimentar o fluxo "Solicitar item".
+    if (!estado.isMestre && id) { toast("Só o Mestre pode editar um item já existente no Banco Global.", "erro"); return; }
     const nome = el.modalNome.value.trim();
     const tag = el.modalTag.value;
     if (!nome) { toast("Dê um nome ao item.", "erro"); return; }
@@ -9275,7 +9311,15 @@ async function salvarItemBancoDoModal(id) {
         // texto livre opcional, usada só pra busca/filtro na Biblioteca
         // de Itens. Sem relação com `categoria` (levando/casa), que é
         // exclusivo de item de ficha e nunca existe no molde do Banco.
-        categoriaBanco: el.modalCategoriaBanco.value.trim()
+        categoriaBanco: el.modalCategoriaBanco.value.trim(),
+        // Só gravado ao CRIAR (nunca sobrescrito numa edição — update()
+        // é parcial, então omitir esses campos aqui preserva o valor
+        // original quando o Mestre edita um item já existente) — mesma
+        // ideia de criadoPorNome/criadoPorTipo em receitas-globais.js.
+        ...(!id ? {
+            criadoPorNome: estado.fichaAtual?.config?.nomeExibicao || estado.sessao?.nome || (estado.isMestre ? "Mestre" : "Jogador"),
+            criadoPorTipo: estado.isMestre ? "mestre" : "jogador"
+        } : {})
     };
 
     try {
@@ -10559,7 +10603,16 @@ function configurarDrawerPendentes() {
     // bloqueando o resto da tela.
     document.addEventListener("click", (e) => {
         if (!el.drawerPendentes.classList.contains("aberto")) return;
-        if (el.drawerPendentes.contains(e.target) || el.btnPendentesLateral.contains(e.target)) return;
+        // Usa composedPath() em vez de .contains(e.target): ao Confirmar/
+        // Rejeitar uma ação, o Firebase re-renderiza a gaveta (recria os
+        // cards) ainda durante o bubbling deste mesmo clique — e.target
+        // vira um nó órfão, fazendo .contains() achar (errado) que o
+        // clique foi "fora" e fechando a gaveta sozinha. composedPath()
+        // guarda o caminho de onde o clique realmente aconteceu, no
+        // instante em que aconteceu, então continua correto mesmo se o
+        // elemento já tiver sido removido do DOM.
+        const caminho = e.composedPath();
+        if (caminho.includes(el.drawerPendentes) || caminho.includes(el.btnPendentesLateral)) return;
         fechar();
     });
 }

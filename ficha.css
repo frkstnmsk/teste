@@ -1178,9 +1178,6 @@
    não ocupar espaço permanente no card — especialmente importante no
    celular, onde cada linha extra custa caro. */
 .entity-list .entity-sub {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--text-dim);
     max-height: 0;
     opacity: 0;
     overflow: hidden;
@@ -1189,8 +1186,46 @@
 .entity-list li:hover .entity-sub,
 .entity-list li:focus-within .entity-sub,
 .entity-list li.entity-sub-fixa .entity-sub {
-    max-height: 120px;
+    max-height: 260px;
     opacity: 1;
+    overflow-y: auto;
+}
+/* Cada detalhe do item (tag, peso, volume, calibre, munição, classe de
+   proteção etc.) era uma string só separada por " · " — um bloco de
+   texto corrido difícil de escanear. Agora cada um vira um "chip"
+   próprio, com fundo e respiro, fácil de achar de relance. */
+.entity-list .entity-detalhes-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    padding-top: 2px;
+}
+.entity-list .chip-detalhe {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.09);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    line-height: 1.5;
+    color: var(--text-dim);
+    white-space: nowrap;
+}
+/* Descrição do item (antes só visível dentro do modal de editar):
+   texto corrido normal, com quebra de linha de verdade, separado
+   visualmente dos chips por uma linha tracejada — fica claro que é
+   prosa livre e não mais um dado mecânico do item. */
+.entity-list .entity-descricao-texto {
+    margin: 6px 0 0;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(255,255,255,0.12);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-style: italic;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.62);
+    white-space: normal;
 }
 /* Em telas touch (celular/tablet) não existe hover de verdade — e tocar
    no item já abre o modal de edição antes de dar tempo de "passar o
@@ -1200,9 +1235,42 @@
    original do hover. */
 @media (hover: none) {
     .entity-list .entity-sub {
-        max-height: 120px;
+        max-height: 260px;
         opacity: 1;
+        overflow-y: auto;
     }
+}
+/* Clicar no item (abas/inventario.js: li.addEventListener("click", ...))
+   alterna esta classe — vira um "acordeão" clicável, maior e mais
+   destacado que a simples prévia de hover, com o botão Editar (só
+   Mestre) dentro. Sobrescreve o hover normal para ficar consistente
+   mesmo tirando o mouse de cima depois de clicar. */
+.entity-list li.entity-item-expandido {
+    background: rgba(255,255,255,0.045);
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.09);
+}
+.entity-list li.entity-item-expandido .entity-sub {
+    max-height: 600px;
+    opacity: 1;
+    overflow-y: auto;
+    padding: 8px 4px 4px;
+}
+.entity-list li.entity-item-expandido .entity-detalhes-chips {
+    gap: 6px 8px;
+}
+.entity-list li.entity-item-expandido .chip-detalhe {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+}
+.entity-list li.entity-item-expandido .entity-descricao-texto {
+    font-size: 0.85rem;
+}
+.entity-list .btn-editar-item-expandido {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.72rem;
+    padding: 5px 12px;
 }
 .entity-list .entity-badges {
     display: flex;

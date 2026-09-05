@@ -20,10 +20,12 @@ export function renderizarFinancas() {
         : "apenas o Mestre pode editar os saldos — use \"Gastar dinheiro\" abaixo pra remover";
     el.financasGastarBloco.style.display = estado.isMestre ? "none" : "block";
     el.financasMoverBloco.style.display = estado.isMestre ? "none" : "block";
+    el.financasSolicitarBloco.style.display = estado.isMestre ? "none" : "block";
 
     renderizarSaldos();
     renderizarOpcoesOrigemGasto();
     renderizarOpcoesMoverDinheiro();
+    renderizarOpcoesSolicitarDinheiro();
 
     if (document.activeElement !== el.financasGanhoFixo) {
         el.financasGanhoFixo.value = estado.fichaAtual.dados.ganhoFixo ?? 0;
@@ -100,6 +102,22 @@ export function renderizarOpcoesOrigemGasto() {
         el.financasGastarOrigem.appendChild(opt);
     });
     if (saldos.some(s => s.id === escolhaAnterior)) el.financasGastarOrigem.value = escolhaAnterior;
+}
+
+// Popula o dropdown "pra qual saldo" de "Solicitar dinheiro" com os
+// saldos atuais da ficha — mesma ideia de renderizarOpcoesOrigemGasto,
+// só que pro fluxo inverso (pedir crédito em vez de gasto).
+export function renderizarOpcoesSolicitarDinheiro() {
+    const saldos = todosOsSaldos(estado.fichaAtual);
+    const escolhaAnterior = el.financasSolicitarDestino.value;
+    el.financasSolicitarDestino.innerHTML = "";
+    saldos.forEach((s) => {
+        const opt = document.createElement("option");
+        opt.value = s.id;
+        opt.innerText = s.nome;
+        el.financasSolicitarDestino.appendChild(opt);
+    });
+    if (saldos.some(s => s.id === escolhaAnterior)) el.financasSolicitarDestino.value = escolhaAnterior;
 }
 
 // Popula os dois dropdowns ("De" / "Para") de "Mover dinheiro entre
@@ -249,5 +267,28 @@ export function configurarFinancas() {
         });
         toast("Pedido de movimentação enviado ao Mestre.");
         el.financasMoverValor.value = 0;
+    });
+
+    // Solicitar dinheiro — o jogador pede um valor novo (ganho em jogo,
+    // negociado com o Mestre fora do sistema etc.) e já escolhe em qual
+    // dos PRÓPRIOS saldos ele deve cair; vira pedido pendente (regra 4),
+    // o Mestre só aprova o valor (ver "solicitar_dinheiro" em mestre.js).
+    el.financasSolicitarBtn.addEventListener("click", async () => {
+        if (!estado.fichaAtual || !estado.fichaAtualId || estado.isMestre) return;
+        const valor = Number(el.financasSolicitarValor.value) || 0;
+        if (valor <= 0) { toast("Informe um valor maior que zero.", "erro"); return; }
+        const saldoId = el.financasSolicitarDestino.value;
+        const saldo = todosOsSaldos(estado.fichaAtual).find(s => s.id === saldoId);
+        if (!saldo) { toast("Escolha um saldo válido.", "erro"); return; }
+        const nomeJogador = estado.fichaAtual?.config?.nomeExibicao || estado.sessao?.nome || estado.fichaAtualId;
+        await criarAcaoPendente({
+            tipo: "solicitar_dinheiro",
+            fichaId: estado.fichaAtualId,
+            nomeJogador,
+            detalhe: `${nomeJogador} está solicitando CN$ ${valor} (pra "${saldo.nome}").`,
+            payload: { valor, saldoId, saldoNome: saldo.nome }
+        });
+        toast("Pedido de dinheiro enviado ao Mestre.");
+        el.financasSolicitarValor.value = 0;
     });
 }
