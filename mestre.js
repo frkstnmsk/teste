@@ -5,7 +5,7 @@
 // trava de edição), rolar dado, causar dano, gerenciar NPCs, avançar o
 // dia (com a regra de Domingo) e confirmar avanço de treinamento.
 
-import { db } from "./firebase-config.js";
+import { db } from "./firebase-config.js?v=20260916-bfcachefix";
 import { ref, set, get, update, push, remove, onValue } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 import { caminhoMesa } from "./mesa.js";
 import {

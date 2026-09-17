@@ -23,7 +23,7 @@
 // configure as "Regras" do Realtime Database no painel do Firebase
 // (veja o README.md do repositório para o trecho de regras sugerido).
 
-import { db } from "./firebase-config.js";
+import { db } from "./firebase-config.js?v=20260916-bfcachefix";
 import { ref, set, get } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 
 // ACESSO DO(S) MESTRE(S) CANÔNICO(S) — um por mesa. `mesaId` é o

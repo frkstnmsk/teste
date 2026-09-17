@@ -73,7 +73,7 @@
 // }
 // =====================================================================
 
-import { db } from "./firebase-config.js";
+import { db } from "./firebase-config.js?v=20260916-bfcachefix";
 import { ref, set, get, update, remove, push, onValue } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 
 // Escuta a lista completa do banco (usada tanto pela aba "Receitas" da

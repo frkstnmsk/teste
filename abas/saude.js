@@ -28,7 +28,7 @@
 // ---------------------------------------------------------------------
 
 import { ref, update } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
-import { db } from "../firebase-config.js";
+import { db } from "../firebase-config.js?v=20260916-bfcachefix";
 import { caminhoMesa } from "../mesa.js";
 import { estado } from "../estado.js";
 import {

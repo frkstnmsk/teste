@@ -5,7 +5,7 @@
 // vivem na raiz do banco (`calendario`, `logDados`), compartilhados por
 // todos que estão olhando a tela — Mestre e jogadores.
 
-import { db } from "./firebase-config.js";
+import { db } from "./firebase-config.js?v=20260916-bfcachefix";
 import { ref, set, get, update, push, onValue, query, limitToLast } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 import { caminhoMesa } from "./mesa.js";
 

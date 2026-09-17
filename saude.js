@@ -12,7 +12,7 @@
 // do golpe — isso entra nas próximas etapas, por cima do que está aqui.
 // ---------------------------------------------------------------------
 
-import { db } from "./firebase-config.js";
+import { db } from "./firebase-config.js?v=20260916-bfcachefix";
 import { ref, get, set, update, remove, push, onValue } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 import { caminhoMesa } from "./mesa.js";
 import { normalizarFicha } from "./normalizacao.js?v=20260822-fixhistorico";

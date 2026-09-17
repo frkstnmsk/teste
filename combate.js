@@ -11,7 +11,7 @@
 // // exatamente com o que já existe no seu projeto.
 // ============================================================
 
-import { db } from './firebase-config.js';
+import { db } from './firebase-config.js?v=20260916-bfcachefix';
 import {
   ref,
   get,

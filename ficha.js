@@ -2,7 +2,7 @@
 // CHUVA DE NEON — Ficha (orquestração principal)
 // =====================================================================
 
-import { db } from "./firebase-config.js";
+import { db } from "./firebase-config.js?v=20260916-bfcachefix";
 import { ref, set, get, update, remove, onValue, off } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 import { caminhoMesa } from "./mesa.js";
 import { estado, definirLimpezaPainelMestre } from "./estado.js";

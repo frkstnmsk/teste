@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------
 
 import { ref, update, remove } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
-import { db } from "../firebase-config.js";
+import { db } from "../firebase-config.js?v=20260916-bfcachefix";
 import { estado } from "../estado.js";
 import { el, toast, caminhoBase, agendarSalvamento, escapeHtml } from "../ficha.js?v=20260830-npcnivelpv";
 import { arredondarMoeda, ehIdSaldoDeItem, idItemDoSaldo, campoSaldoDoItem, todosOsSaldos } from "../dados-manual.js";

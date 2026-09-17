@@ -8,7 +8,7 @@
 // distribuído naquela sessão. Só o Mestre cria/edita/exclui (ver
 // isMestre em configurarRegistroSessoes, ficha.js) — jogador só lê.
 
-import { db } from "./firebase-config.js";
+import { db } from "./firebase-config.js?v=20260916-bfcachefix";
 import { ref, set, update, remove, push, onValue } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
 import { caminhoMesa } from "./mesa.js";
 

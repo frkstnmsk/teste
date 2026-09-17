@@ -51,7 +51,7 @@ import {
     recalcularQuimicoAutoPreenchido, renderizarLinhasMateriaisQuimico, modificadoresAtuais
 } from "../ficha.js?v=20260830-npcnivelpv";
 import { ref, get, update, remove } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
-import { db } from "../firebase-config.js";
+import { db } from "../firebase-config.js?v=20260916-bfcachefix";
 import {
     criarAcaoPendente, abrirReacaoPendente, aplicarDano, registrarFeridasDeSangramento,
     testarSangramento, testarSangramentoProfundo
